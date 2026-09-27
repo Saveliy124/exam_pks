@@ -1,0 +1,4 @@
+target/
+.local-db/
+.maven-cache/
+.DS_Store
