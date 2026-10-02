@@ -18,6 +18,13 @@ import java.util.stream.Collectors;
 public final class ExamCenterService {
     private final ExamCenterRepository repository;
 
+    /** Ошибка правила предметной области с сообщением для пользователя. */
+    public static final class BusinessException extends RuntimeException {
+        public BusinessException(String message) {
+            super(message);
+        }
+    }
+
     public ExamCenterService(ExamCenterRepository repository) {
         this.repository = repository;
     }

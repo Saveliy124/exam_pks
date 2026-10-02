@@ -1,6 +1,6 @@
 package ru.mirea.examcenter.ui;
 
-import ru.mirea.examcenter.service.BusinessException;
+import ru.mirea.examcenter.service.ExamCenterService.BusinessException;
 import ru.mirea.examcenter.export.DataExporter;
 import ru.mirea.examcenter.export.XlsxExporter;
 import ru.mirea.examcenter.model.Applicant;

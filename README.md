@@ -59,14 +59,13 @@ ConsoleUi → ExamCenterService → ExamCenterRepository → PostgreSQL
              model и enum          JDBC и SQL-запросы
 ```
 
-В `src/main/java/ru/mirea/examcenter` всего 10 Java-файлов:
+В `src/main/java/ru/mirea/examcenter` всего 9 Java-файлов. Для понимания программы начните с `Main → ConsoleUi → ExamCenterService → ExamCenterRepository`.
 
 | Файл | Назначение |
 | --- | --- |
 | `Main.java` | Проверяет подключение, связывает компоненты и запускает меню. |
 | `ui/ConsoleUi.java` | Читает ввод, показывает меню и результаты, обрабатывает ошибки. |
-| `service/ExamCenterService.java` | Проверяет правила, выполняет операции с кандидатами и заявками, поиск, фильтрацию, сортировку и статистику. |
-| `service/BusinessException.java` | Собственное исключение для нарушений правил и отсутствующих ID. |
+| `service/ExamCenterService.java` | Проверяет правила, выполняет операции с кандидатами и заявками, поиск, фильтрацию, сортировку и статистику. Внутри находится собственное исключение `BusinessException` для понятных ошибок. |
 | `repository/ExamCenterRepository.java` | Открывает JDBC-соединения, выполняет параметризованные SQL-запросы и читает метаданные таблиц. |
 | `model/Applicant.java` | Данные кандидата. |
 | `model/ExamApplication.java` | Данные заявки и связанного кандидата. |
@@ -75,6 +74,8 @@ ConsoleUi → ExamCenterService → ExamCenterRepository → PostgreSQL
 | `export/XlsxExporter.java` | Реализация экспорта через Apache POI. |
 
 `sql/schema.sql` создаёт две связанные таблицы и ограничения, `sql/seed.sql` добавляет 5 кандидатов и 10 заявок с четырьмя статусами. `docs/er-diagram.svg` и `docs/er-diagram.md` содержат ER-диаграмму и её описание.
+
+Разделение на меню, сервис и репозиторий нужно по ТЗ: SQL находится только в репозитории, правила — в сервисе. `DataExporter` оставлен отдельным интерфейсом, потому что ТЗ требует интерфейс и полиморфизм; `XlsxExporter` реализует его. Каталоги `.idea`, `.local-db`, `.maven-cache` и `target` содержат настройки IDE, локальную БД, зависимости и результаты сборки. Их не нужно изучать для объяснения логики.
 
 ## Бизнес-правила
 
