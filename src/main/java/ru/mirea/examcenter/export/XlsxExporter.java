@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import ru.mirea.examcenter.model.Applicant;
 import ru.mirea.examcenter.model.ExamApplication;
+import ru.mirea.examcenter.model.Examiner;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,7 +21,8 @@ import java.util.List;
 /** Экспорт текущих данных PostgreSQL в обычный файл Excel. */
 public final class XlsxExporter implements DataExporter {
     @Override
-    public void export(Path file, List<Applicant> applicants, List<ExamApplication> applications)
+    public void export(Path file, List<Applicant> applicants, List<ExamApplication> applications,
+                       List<Examiner> examiners)
             throws IOException {
         Path parent = file.toAbsolutePath().getParent();
         if (parent != null) Files.createDirectories(parent);
@@ -38,7 +40,7 @@ public final class XlsxExporter implements DataExporter {
             date.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("dd.mm.yyyy hh:mm"));
 
             Sheet people = sheet(workbook, "Кандидаты", header,
-                    "ID", "ФИО", "Email", "Телефон");
+                    "ID", "ФИО", "Email", "Телефон", "Статус");
             for (int i = 0; i < applicants.size(); i++) {
                 Applicant person = applicants.get(i);
                 Row row = people.createRow(i + 1);
@@ -46,8 +48,9 @@ public final class XlsxExporter implements DataExporter {
                 row.createCell(1).setCellValue(person.getFullName());
                 row.createCell(2).setCellValue(person.getEmail());
                 row.createCell(3).setCellValue(person.getPhone());
+                row.createCell(4).setCellValue(person.getStatus().name());
             }
-            widths(people, 10, 30, 34, 22);
+            widths(people, 10, 30, 34, 22, 16);
 
             Sheet requests = sheet(workbook, "Заявки", header,
                     "ID", "ID кандидата", "Кандидат", "Email", "Экзамен",
@@ -69,6 +72,19 @@ public final class XlsxExporter implements DataExporter {
                 row.getCell(8).setCellStyle(date);
             }
             widths(requests, 10, 14, 30, 34, 30, 22, 18, 12, 22);
+
+            Sheet staff = sheet(workbook, "Экзаменаторы", header,
+                    "ID", "ФИО", "Email", "Предмет", "Статус");
+            for (int i = 0; i < examiners.size(); i++) {
+                Examiner examiner = examiners.get(i);
+                Row row = staff.createRow(i + 1);
+                row.createCell(0).setCellValue(examiner.getId());
+                row.createCell(1).setCellValue(examiner.getFullName());
+                row.createCell(2).setCellValue(examiner.getEmail());
+                row.createCell(3).setCellValue(examiner.getSubject());
+                row.createCell(4).setCellValue(examiner.getStatus().name());
+            }
+            widths(staff, 10, 30, 34, 25, 16);
             workbook.write(out);
         }
     }

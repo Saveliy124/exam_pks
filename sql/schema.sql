@@ -2,7 +2,29 @@ CREATE TABLE IF NOT EXISTS applicants (
     id BIGSERIAL PRIMARY KEY,
     full_name VARCHAR(120) NOT NULL CHECK (length(trim(full_name)) >= 2),
     email VARCHAR(254) NOT NULL UNIQUE CHECK (position('@' in email) > 1),
-    phone VARCHAR(30) NOT NULL DEFAULT ''
+    phone VARCHAR(30) NOT NULL DEFAULT '',
+    status VARCHAR(12) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'BLOCKED'))
+);
+
+-- Добавление поля в базу, созданную предыдущей версией проекта.
+ALTER TABLE applicants ADD COLUMN IF NOT EXISTS status VARCHAR(12) NOT NULL DEFAULT 'ACTIVE';
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'applicants'::regclass AND conname = 'applicants_status_check'
+    ) THEN
+        ALTER TABLE applicants ADD CONSTRAINT applicants_status_check
+            CHECK (status IN ('ACTIVE', 'BLOCKED'));
+    END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS examiners (
+    id BIGSERIAL PRIMARY KEY,
+    full_name VARCHAR(120) NOT NULL CHECK (length(trim(full_name)) >= 2),
+    email VARCHAR(254) NOT NULL UNIQUE CHECK (position('@' in email) > 1),
+    subject VARCHAR(120) NOT NULL CHECK (length(trim(subject)) >= 2),
+    status VARCHAR(12) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 
 CREATE TABLE IF NOT EXISTS exam_applications (

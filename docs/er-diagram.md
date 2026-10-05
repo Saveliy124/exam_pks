@@ -8,6 +8,7 @@ erDiagram
         VARCHAR full_name
         VARCHAR email UK
         VARCHAR phone
+        VARCHAR status
     }
     EXAM_APPLICATIONS {
         BIGINT id PK
@@ -18,6 +19,15 @@ erDiagram
         SMALLINT score
         TIMESTAMP created_at
     }
+    EXAMINERS {
+        BIGINT id PK
+        VARCHAR full_name
+        VARCHAR email UK
+        VARCHAR subject
+        VARCHAR status
+    }
 ```
 
 Один кандидат может подать несколько заявок. Каждая заявка принадлежит ровно одному кандидату. Внешний ключ `exam_applications.applicant_id` указывает на `applicants.id`.
+
+`examiners` — отдельный справочник экзаменаторов. Для него реализованы собственные CRUD, фильтры и сортировка; назначение экзаменатора на заявку пока не является частью модели КР 1.

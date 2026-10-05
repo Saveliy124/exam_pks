@@ -1,4 +1,6 @@
 target/
 .local-db/
 .maven-cache/
+.idea/
 .DS_Store
+~$*.docx

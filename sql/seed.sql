@@ -6,6 +6,14 @@ INSERT INTO applicants(full_name, email, phone) VALUES
   ('Дарья Орлова', 'daria.orlova@example.org', '+7 900 555-55-55')
 ON CONFLICT (email) DO NOTHING;
 
+INSERT INTO examiners(full_name, email, subject, status) VALUES
+  ('Мария Петрова', 'maria.petrova@exam.org', 'Математика', 'ACTIVE'),
+  ('Игорь Волков', 'igor.volkov@exam.org', 'Физика', 'ACTIVE'),
+  ('Елена Морозова', 'elena.morozova@exam.org', 'Информатика', 'ACTIVE'),
+  ('Ольга Белова', 'olga.belova@exam.org', 'Русский язык', 'INACTIVE'),
+  ('Павел Романов', 'pavel.romanov@exam.org', 'История', 'ACTIVE')
+ON CONFLICT (email) DO NOTHING;
+
 WITH seed(email, exam_name, day_offset, status, score) AS (
     VALUES
       ('anna.smirnova@example.org', 'Математика', 7, 'NEW', NULL::smallint),

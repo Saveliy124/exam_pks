@@ -19,10 +19,15 @@ DB_EXISTS=$("$PG_BIN/psql" -h /private/tmp -p "$DB_PORT" -U postgres -d postgres
     -c "SELECT 1 FROM pg_database WHERE datname='exam_center'")
 if [ "$DB_EXISTS" != 1 ]; then
     "$PG_BIN/createdb" -h /private/tmp -p "$DB_PORT" -U postgres exam_center
+fi
+
+# Схема обновляет и старую базу. Учебные записи добавляются один раз.
+"$PG_BIN/psql" -h /private/tmp -p "$DB_PORT" -U postgres -d exam_center \
+    -v ON_ERROR_STOP=1 -q -f "$PROJECT_DIR/sql/schema.sql"
+if [ ! -f "$DB_DIR/.seed-v2" ]; then
     "$PG_BIN/psql" -h /private/tmp -p "$DB_PORT" -U postgres -d exam_center \
-        -v ON_ERROR_STOP=1 -f "$PROJECT_DIR/sql/schema.sql"
-    "$PG_BIN/psql" -h /private/tmp -p "$DB_PORT" -U postgres -d exam_center \
-        -v ON_ERROR_STOP=1 -f "$PROJECT_DIR/sql/seed.sql"
+        -v ON_ERROR_STOP=1 -q -f "$PROJECT_DIR/sql/seed.sql"
+    touch "$DB_DIR/.seed-v2"
 fi
 
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home

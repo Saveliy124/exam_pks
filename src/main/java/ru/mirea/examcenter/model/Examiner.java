@@ -1,17 +1,17 @@
 package ru.mirea.examcenter.model;
 
-public final class Applicant {
+public final class Examiner {
     private long id;
     private String fullName;
     private String email;
-    private String phone;
-    private ApplicantStatus status;
+    private String subject;
+    private ExaminerStatus status;
 
-    public Applicant(long id, String fullName, String email, String phone, ApplicantStatus status) {
+    public Examiner(long id, String fullName, String email, String subject, ExaminerStatus status) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
-        this.phone = phone;
+        this.subject = subject;
         this.status = status;
     }
 
@@ -21,8 +21,8 @@ public final class Applicant {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-    public ApplicantStatus getStatus() { return status; }
-    public void setStatus(ApplicantStatus status) { this.status = status; }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+    public ExaminerStatus getStatus() { return status; }
+    public void setStatus(ExaminerStatus status) { this.status = status; }
 }

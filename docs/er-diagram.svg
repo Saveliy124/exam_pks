@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" role="img" aria-labelledby="title description">
   <title id="title">ER диаграмма экзаменационного центра</title>
-  <desc id="description">Один кандидат может иметь несколько заявок на экзамен. Внешний ключ applicant_id ссылается на applicants.id.</desc>
-  <rect width="1080" height="510" fill="#fff"/>
+  <desc id="description">Три сущности: кандидаты, заявки и экзаменаторы. Один кандидат может иметь несколько заявок. Экзаменаторы хранятся в отдельном справочнике.</desc>
+  <rect width="1080" height="800" fill="#fff"/>
   <text x="70" y="65" font-family="Arial, sans-serif" font-size="27" font-weight="700" fill="#16243b">ER диаграмма экзаменационного центра</text>
-  <rect x="70" y="115" width="360" height="295" rx="8" fill="#fff" stroke="#aeb8c6" stroke-width="2"/>
+  <rect x="70" y="115" width="360" height="330" rx="8" fill="#fff" stroke="#aeb8c6" stroke-width="2"/>
   <rect x="70" y="115" width="360" height="58" rx="8" fill="#263a5a"/>
   <rect x="70" y="155" width="360" height="18" fill="#263a5a"/>
   <text x="92" y="153" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#fff">applicants</text>
@@ -12,10 +12,12 @@
     <text x="148" y="257">full_name</text><text x="300" y="257">VARCHAR</text>
     <text x="92" y="302">UQ</text><text x="148" y="302">email</text><text x="300" y="302">VARCHAR</text>
     <text x="148" y="347">phone</text><text x="300" y="347">VARCHAR</text>
+    <text x="148" y="392">status</text><text x="300" y="392">VARCHAR</text>
   </g>
   <line x1="92" y1="225" x2="408" y2="225" stroke="#e1e5eb"/>
   <line x1="92" y1="270" x2="408" y2="270" stroke="#e1e5eb"/>
   <line x1="92" y1="315" x2="408" y2="315" stroke="#e1e5eb"/>
+  <line x1="92" y1="360" x2="408" y2="360" stroke="#e1e5eb"/>
   <rect x="650" y="115" width="360" height="315" rx="8" fill="#fff" stroke="#aeb8c6" stroke-width="2"/>
   <rect x="650" y="115" width="360" height="58" rx="8" fill="#263a5a"/>
   <rect x="650" y="155" width="360" height="18" fill="#263a5a"/>
@@ -35,5 +37,16 @@
   <path d="M631 243 L650 260 L631 277 M631 260 L650 260" fill="none" stroke="#526987" stroke-width="3"/>
   <text x="473" y="238" font-family="Arial, sans-serif" font-size="15" fill="#526987">1 кандидат</text>
   <text x="484" y="305" font-family="Arial, sans-serif" font-size="15" fill="#526987">0..N заявок</text>
-  <text x="70" y="462" font-family="Arial, sans-serif" font-size="16" fill="#526987">exam_applications.applicant_id → applicants.id</text>
+  <text x="70" y="485" font-family="Arial, sans-serif" font-size="16" fill="#526987">exam_applications.applicant_id → applicants.id</text>
+  <rect x="360" y="525" width="360" height="235" rx="8" fill="#fff" stroke="#aeb8c6" stroke-width="2"/>
+  <rect x="360" y="525" width="360" height="58" rx="8" fill="#263a5a"/>
+  <rect x="360" y="565" width="360" height="18" fill="#263a5a"/>
+  <text x="382" y="563" font-family="Arial, sans-serif" font-size="21" font-weight="700" fill="#fff">examiners</text>
+  <g font-family="Arial, sans-serif" font-size="17" fill="#263447">
+    <text x="382" y="620">PK</text><text x="438" y="620">id</text><text x="590" y="620">BIGINT</text>
+    <text x="438" y="652">full_name</text><text x="590" y="652">VARCHAR</text>
+    <text x="382" y="684">UQ</text><text x="438" y="684">email</text><text x="590" y="684">VARCHAR</text>
+    <text x="438" y="716">subject</text><text x="590" y="716">VARCHAR</text>
+    <text x="438" y="748">status</text><text x="590" y="748">VARCHAR</text>
+  </g>
 </svg>

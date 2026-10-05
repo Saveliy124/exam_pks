@@ -1,12 +1,20 @@
 package ru.mirea.examcenter.ui;
 
-import ru.mirea.examcenter.service.ExamCenterService.BusinessException;
 import ru.mirea.examcenter.export.DataExporter;
 import ru.mirea.examcenter.export.XlsxExporter;
 import ru.mirea.examcenter.model.Applicant;
+import ru.mirea.examcenter.model.ApplicantStatus;
 import ru.mirea.examcenter.model.ApplicationStatus;
 import ru.mirea.examcenter.model.ExamApplication;
-import ru.mirea.examcenter.service.ExamCenterService;
+import ru.mirea.examcenter.model.Examiner;
+import ru.mirea.examcenter.model.ExaminerStatus;
+import ru.mirea.examcenter.service.ApplicantService;
+import ru.mirea.examcenter.service.ApplicantService.ApplicantException;
+import ru.mirea.examcenter.service.ExamApplicationService;
+import ru.mirea.examcenter.service.ExamApplicationService.ApplicationException;
+import ru.mirea.examcenter.service.ExaminerService;
+import ru.mirea.examcenter.service.ExaminerService.ExaminerException;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,193 +24,226 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
 public final class ConsoleUi {
     private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final ExamCenterService service;
-    private final DataExporter exporter;
+
+    private final ApplicantService applicants;
+    private final ExamApplicationService applications;
+    private final ExaminerService examiners;
+    private final DataExporter exporter = new XlsxExporter();
     private final Scanner input = new Scanner(System.in, "UTF-8");
 
-    public ConsoleUi(ExamCenterService service) {
-        this.service = service;
-        this.exporter = new XlsxExporter();
+    public ConsoleUi(ApplicantService applicants, ExamApplicationService applications,
+                     ExaminerService examiners) {
+        this.applicants = applicants;
+        this.applications = applications;
+        this.examiners = examiners;
     }
 
+    private interface MenuAction { void execute(int choice) throws SQLException, IOException; }
+
     public void run() {
-        boolean running = true;
-        while (running) {
-            System.out.println("\n========== ЭКЗАМЕНАЦИОННЫЙ ЦЕНТР ==========");
-            System.out.println("1. Кандидаты\n2. Заявки на экзамен\n3. Поиск заявок\n4. Фильтрация заявок");
-            System.out.println("5. Сортировка заявок\n6. Статистика\n7. Экспорт в Excel");
-            System.out.println("8. Таблицы базы данных\n0. Выход");
-            try {
-                switch (integer("Выберите действие: ")) {
+        try {
+            menu("ЭКЗАМЕНАЦИОННЫЙ ЦЕНТР",
+                    "1 — Кандидаты; 2 — Заявки; 3 — Экзаменаторы; 4 — Статистика; " +
+                    "5 — Экспорт Excel; 6 — Таблицы БД; 0 — Выход", choice -> {
+                switch (choice) {
                     case 1: applicantsMenu(); break;
                     case 2: applicationsMenu(); break;
-                    case 3: searchMenu(); break;
-                    case 4: filterMenu(); break;
-                    case 5: sortMenu(); break;
-                    case 6: statistics(); break;
-                    case 7: export(); break;
-                    case 8: tables(); break;
-                    case 0: running = false; break;
-                    default: System.out.println("Нет такого пункта меню.");
+                    case 3: examinersMenu(); break;
+                    case 4: statistics(); break;
+                    case 5: export(); break;
+                    case 6: tables(); break;
+                    default: unknown();
                 }
-            } catch (BusinessException | IllegalArgumentException ex) {
+            });
+        } catch (EndOfInput ignored) {
+            // Ввод закончился, например при запуске из скрипта.
+        }
+        System.out.println("Работа завершена.");
+    }
+
+    private void menu(String title, String options, MenuAction action) {
+        while (true) {
+            System.out.println("\n========== " + title + " ==========");
+            System.out.println(options.replace("; ", "\n"));
+            int choice = menuChoice();
+            if (choice == 0) return;
+            try {
+                action.execute(choice);
+            } catch (ApplicantException | ApplicationException | ExaminerException |
+                     IllegalArgumentException ex) {
                 System.out.println("Ошибка: " + ex.getMessage());
             } catch (SQLException ex) {
                 System.out.println("Ошибка базы данных (SQLState " + ex.getSQLState() + "): " + ex.getMessage());
             } catch (IOException ex) {
                 System.out.println("Ошибка экспорта: " + ex.getMessage());
-            } catch (EndOfInput ex) {
-                running = false;
-            }
-        }
-        System.out.println("Работа завершена.");
-    }
-
-    private void applicantsMenu() throws SQLException {
-        boolean back = false;
-        while (!back) {
-            System.out.println("\nКАНДИДАТЫ: 1 — добавить, 2 — список, 3 — по ID, 0 — назад");
-            try {
-                switch (integer("Действие: ")) {
-                    case 1:
-                        long id = service.createApplicant(line("ФИО: "), line("Email: "), line("Телефон: "));
-                        System.out.println("Кандидат создан, ID: " + id); break;
-                    case 2: printApplicants(service.allApplicants()); break;
-                    case 3: printApplicants(java.util.Collections.singletonList(service.getApplicant(positiveId()))); break;
-                    case 0: back = true; break;
-                    default: System.out.println("Нет такого пункта меню.");
-                }
-            } catch (BusinessException | IllegalArgumentException ex) {
-                System.out.println("Ошибка: " + ex.getMessage());
-            } catch (SQLException ex) {
-                System.out.println("Ошибка базы данных (SQLState " + ex.getSQLState() + "): " + ex.getMessage());
             }
         }
     }
 
-    private void applicationsMenu() throws SQLException {
-        boolean back = false;
-        while (!back) {
-            System.out.println("\nЗАЯВКИ: 1 — создать, 2 — список, 3 — по ID, 4 — изменить,");
-            System.out.println("5 — удалить, 6 — согласовать, 7 — завершить, 8 — отменить, 0 — назад");
-            try {
-                switch (integer("Действие: ")) {
-                    case 1:
-                        long id = service.createApplication(positiveId(), line("Название экзамена: "),
-                                dateTime("Дата и время (дд.мм.гггг чч:мм): "));
-                        System.out.println("Заявка создана, ID: " + id); break;
-                    case 2: printApplications(service.allApplications()); break;
-                    case 3: printApplications(java.util.Collections.singletonList(service.getApplication(positiveId()))); break;
-                    case 4: updateApplication(); break;
-                    case 5:
-                        service.deleteApplication(positiveId()); System.out.println("Заявка удалена."); break;
-                    case 6:
-                        service.changeStatus(positiveId(), ApplicationStatus.APPROVED, null);
+    private void applicantsMenu() {
+        menu("КАНДИДАТЫ", "1 — Создать; 2 — Список; 3 — По ID; 4 — Изменить; " +
+                "5 — Удалить; 6 — Поиск по ФИО; 7 — Фильтр по статусу; " +
+                "8 — Фильтр по домену email; 9 — Сортировка по ФИО; " +
+                "10 — Сортировка по email; 0 — Назад", choice -> {
+            switch (choice) {
+                case 1:
+                    long id = applicants.createApplicant(line("ФИО: "), line("Email: "),
+                            line("Телефон: "), applicantStatus());
+                    System.out.println("Кандидат создан, ID: " + id); break;
+                case 2: printApplicants(applicants.allApplicants()); break;
+                case 3: printApplicants(Collections.singletonList(applicants.getApplicant(positiveId()))); break;
+                case 4: updateApplicant(); break;
+                case 5: applicants.deleteApplicant(positiveId()); System.out.println("Кандидат удалён."); break;
+                case 6: printApplicants(applicants.searchByName(line("Фрагмент ФИО: "))); break;
+                case 7: printApplicants(applicants.filterByStatus(applicantStatus())); break;
+                case 8: printApplicants(applicants.filterByEmailDomain(line("Домен после @: "))); break;
+                case 9: printApplicants(applicants.sortByName(ascending())); break;
+                case 10: printApplicants(applicants.sortByEmail(ascending())); break;
+                default: unknown();
+            }
+        });
+    }
+
+    private void updateApplicant() throws SQLException {
+        long id = positiveId();
+        Applicant old = applicants.getApplicant(id);
+        String name = optional("ФИО (Enter — оставить): ", old.getFullName());
+        String email = optional("Email (Enter — оставить): ", old.getEmail());
+        String phone = optional("Телефон (Enter — оставить): ", old.getPhone());
+        String value = line("Статус ACTIVE/BLOCKED (Enter — оставить): ").trim();
+        ApplicantStatus status = value.isEmpty() ? old.getStatus() : parseEnum(value, ApplicantStatus.class);
+        applicants.updateApplicant(id, name, email, phone, status);
+        System.out.println("Кандидат изменён.");
+    }
+
+    private void applicationsMenu() {
+        menu("ЗАЯВКИ", "1 — Создать; 2 — Список; 3 — По ID; 4 — Изменить; " +
+                "5 — Удалить; 6 — Согласовать; 7 — Завершить; 8 — Отменить; " +
+                "9 — Поиск по экзамену; 10 — Поиск по кандидату; " +
+                "11 — Фильтр по статусу; 12 — Фильтр по датам; " +
+                "13 — Сортировка по дате; 14 — Сортировка по ФИО; 0 — Назад", choice -> {
+            switch (choice) {
+                case 1:
+                    long id = applications.createApplication(positiveId(), line("Экзамен: "),
+                            dateTime("Дата и время (дд.мм.гггг чч:мм): "));
+                    System.out.println("Заявка создана, ID: " + id); break;
+                case 2: printApplications(applications.allApplications()); break;
+                case 3: printApplications(Collections.singletonList(applications.getApplication(positiveId()))); break;
+                case 4: updateApplication(); break;
+                case 5: applications.deleteApplication(positiveId()); System.out.println("Заявка удалена."); break;
+                case 6: applications.changeStatus(positiveId(), ApplicationStatus.APPROVED, null);
                         System.out.println("Заявка согласована."); break;
-                    case 7:
-                        long completedId = positiveId();
-                        service.changeStatus(completedId, ApplicationStatus.COMPLETED,
-                                integer("Балл (0–100): "));
-                        System.out.println("Экзамен завершен."); break;
-                    case 8:
-                        service.changeStatus(positiveId(), ApplicationStatus.CANCELLED, null);
+                case 7: applications.changeStatus(positiveId(), ApplicationStatus.COMPLETED,
+                            integer("Балл (0–100): "));
+                        System.out.println("Экзамен завершён."); break;
+                case 8: applications.changeStatus(positiveId(), ApplicationStatus.CANCELLED, null);
                         System.out.println("Заявка отменена."); break;
-                    case 0: back = true; break;
-                    default: System.out.println("Нет такого пункта меню.");
-                }
-            } catch (BusinessException | IllegalArgumentException ex) {
-                System.out.println("Ошибка: " + ex.getMessage());
-            } catch (SQLException ex) {
-                System.out.println("Ошибка базы данных (SQLState " + ex.getSQLState() + "): " + ex.getMessage());
+                case 9: printApplications(applications.searchByExam(line("Фрагмент экзамена: "))); break;
+                case 10: printApplications(applications.searchByApplicant(line("Фрагмент ФИО: "))); break;
+                case 11: printApplications(applications.filterByStatus(applicationStatus())); break;
+                case 12:
+                    LocalDate from = date("С даты (дд.мм.гггг): ");
+                    LocalDate to = date("По дату (дд.мм.гггг): ");
+                    printApplications(applications.filterByDate(from.atStartOfDay(), to.atTime(LocalTime.MAX)));
+                    break;
+                case 13: printApplications(applications.sortByDate(ascending())); break;
+                case 14: printApplications(applications.sortByApplicant(ascending())); break;
+                default: unknown();
             }
-        }
+        });
     }
 
     private void updateApplication() throws SQLException {
         long id = positiveId();
-        ExamApplication current = service.getApplication(id);
+        ExamApplication old = applications.getApplication(id);
         System.out.println("Текущая заявка:");
-        printApplications(java.util.Collections.singletonList(current));
-        String applicantText = line("Новый ID кандидата (Enter — оставить): ").trim();
-        long applicantId = applicantText.isEmpty() ? current.getApplicantId() : parseLong(applicantText);
-        String exam = line("Новое название экзамена (Enter — оставить): ").trim();
-        if (exam.isEmpty()) exam = current.getExamName();
-        String dateText = line("Новая дата дд.мм.гггг чч:мм (Enter — оставить): ").trim();
-        LocalDateTime date = dateText.isEmpty() ? current.getScheduledAt() : parseDateTime(dateText);
-        service.updateApplication(id, applicantId, exam, date);
+        printApplications(Collections.singletonList(old));
+        String applicantText = line("ID кандидата (Enter — оставить): ").trim();
+        long applicantId = applicantText.isEmpty() ? old.getApplicantId() : parseLong(applicantText);
+        String exam = optional("Экзамен (Enter — оставить): ", old.getExamName());
+        String dateText = line("Дата дд.мм.гггг чч:мм (Enter — оставить): ").trim();
+        LocalDateTime time = dateText.isEmpty() ? old.getScheduledAt() : parseDateTime(dateText);
+        applications.updateApplication(id, applicantId, exam, time);
         System.out.println("Заявка изменена.");
     }
 
-    private void searchMenu() throws SQLException {
-        System.out.println("ПОИСК: 1 — по названию экзамена, 2 — по ФИО кандидата");
-        int choice = integer("Действие: ");
-        if (choice == 1) printApplications(service.searchByExam(line("Фрагмент названия: ")));
-        else if (choice == 2) printApplications(service.searchByApplicant(line("Фрагмент ФИО: ")));
-        else System.out.println("Нет такого способа поиска.");
+    private void examinersMenu() {
+        menu("ЭКЗАМЕНАТОРЫ", "1 — Создать; 2 — Список; 3 — По ID; 4 — Изменить; " +
+                "5 — Удалить; 6 — Поиск по ФИО; 7 — Фильтр по статусу; " +
+                "8 — Фильтр по предмету; 9 — Сортировка по ФИО; " +
+                "10 — Сортировка по предмету; 0 — Назад", choice -> {
+            switch (choice) {
+                case 1:
+                    long id = examiners.createExaminer(line("ФИО: "), line("Email: "),
+                            line("Предмет: "), examinerStatus());
+                    System.out.println("Экзаменатор создан, ID: " + id); break;
+                case 2: printExaminers(examiners.allExaminers()); break;
+                case 3: printExaminers(Collections.singletonList(examiners.getExaminer(positiveId()))); break;
+                case 4: updateExaminer(); break;
+                case 5: examiners.deleteExaminer(positiveId()); System.out.println("Экзаменатор удалён."); break;
+                case 6: printExaminers(examiners.searchByName(line("Фрагмент ФИО: "))); break;
+                case 7: printExaminers(examiners.filterByStatus(examinerStatus())); break;
+                case 8: printExaminers(examiners.filterBySubject(line("Фрагмент предмета: "))); break;
+                case 9: printExaminers(examiners.sortByName(ascending())); break;
+                case 10: printExaminers(examiners.sortBySubject(ascending())); break;
+                default: unknown();
+            }
+        });
     }
 
-    private void filterMenu() throws SQLException {
-        System.out.println("ФИЛЬТР: 1 — по статусу, 2 — по диапазону дат");
-        int choice = integer("Действие: ");
-        if (choice == 1) {
-            System.out.println("Статусы: NEW, APPROVED, COMPLETED, CANCELLED");
-            String value = line("Статус: ").trim().toUpperCase(java.util.Locale.ROOT);
-            try { printApplications(service.filterByStatus(ApplicationStatus.valueOf(value))); }
-            catch (IllegalArgumentException ex) { throw new BusinessException("Неизвестный статус."); }
-        } else if (choice == 2) {
-            LocalDate from = date("С даты (дд.мм.гггг): ");
-            LocalDate to = date("По дату (дд.мм.гггг): ");
-            printApplications(service.filterByDate(from.atStartOfDay(), to.atTime(LocalTime.MAX)));
-        } else System.out.println("Нет такого фильтра.");
-    }
-
-    private void sortMenu() throws SQLException {
-        System.out.println("СОРТИРОВКА: 1 — по дате экзамена, 2 — по ФИО кандидата");
-        int choice = integer("Действие: ");
-        if (choice == 1) printApplications(service.sortByDate());
-        else if (choice == 2) printApplications(service.sortByApplicant());
-        else System.out.println("Нет такого способа сортировки.");
+    private void updateExaminer() throws SQLException {
+        long id = positiveId();
+        Examiner old = examiners.getExaminer(id);
+        String name = optional("ФИО (Enter — оставить): ", old.getFullName());
+        String email = optional("Email (Enter — оставить): ", old.getEmail());
+        String subject = optional("Предмет (Enter — оставить): ", old.getSubject());
+        String value = line("Статус ACTIVE/INACTIVE (Enter — оставить): ").trim();
+        ExaminerStatus status = value.isEmpty() ? old.getStatus() : parseEnum(value, ExaminerStatus.class);
+        examiners.updateExaminer(id, name, email, subject, status);
+        System.out.println("Экзаменатор изменён.");
     }
 
     private void statistics() throws SQLException {
-        Map<ApplicationStatus, Long> counts = service.countsByStatus();
-        System.out.println("\nСТАТИСТИКА");
-        System.out.println("Кандидатов: " + service.allApplicants().size());
-        System.out.println("Всего заявок: " + service.allApplications().size());
+        Map<ApplicationStatus, Long> counts = applications.countsByStatus();
+        System.out.println("Кандидатов: " + applicants.allApplicants().size());
+        System.out.println("Экзаменаторов: " + examiners.allExaminers().size());
+        System.out.println("Заявок: " + applications.allApplications().size());
         for (ApplicationStatus status : ApplicationStatus.values())
             System.out.println(status + ": " + counts.get(status));
-        System.out.println("Предстоящих активных экзаменов: " + service.upcomingCount());
+        System.out.println("Предстоящих активных экзаменов: " + applications.upcomingCount());
     }
 
     private void export() throws SQLException, IOException {
         String name = line("Путь к .xlsx (Enter — export/exam_center.xlsx): ").trim();
-        Path path = Paths.get(name.isEmpty() ? "export/exam_center.xlsx" : name);
-        if (!path.toString().toLowerCase(java.util.Locale.ROOT).endsWith(".xlsx"))
-            throw new BusinessException("Имя файла должно оканчиваться на .xlsx.");
-        exporter.export(path, service.allApplicants(), service.allApplications());
-        System.out.println("Экспортировано: " + path.toAbsolutePath());
+        Path file = Paths.get(name.isEmpty() ? "export/exam_center.xlsx" : name);
+        if (!file.toString().toLowerCase(Locale.ROOT).endsWith(".xlsx"))
+            throw new IllegalArgumentException("Нужен файл с расширением .xlsx.");
+        exporter.export(file, applicants.allApplicants(), applications.allApplications(),
+                examiners.allExaminers());
+        System.out.println("Экспортировано: " + file.toAbsolutePath());
     }
 
     private void tables() throws SQLException {
         System.out.println("Таблицы схемы public:");
-        for (String line : service.databaseTables()) System.out.println(line);
-        System.out.println("\nДанные applicants:");
-        printApplicants(service.allApplicants());
-        System.out.println("\nДанные exam_applications:");
-        printApplications(service.allApplications());
+        for (String line : applications.databaseTables()) System.out.println(line);
+        System.out.println("Кандидаты:"); printApplicants(applicants.allApplicants());
+        System.out.println("Заявки:"); printApplications(applications.allApplications());
+        System.out.println("Экзаменаторы:"); printExaminers(examiners.allExaminers());
     }
 
     private void printApplicants(List<Applicant> items) {
         if (items.isEmpty()) { System.out.println("Кандидаты не найдены."); return; }
-        for (Applicant x : items) System.out.printf("%d | %s | %s | %s%n",
-                x.getId(), x.getFullName(), x.getEmail(), x.getPhone());
+        for (Applicant x : items) System.out.printf("%d | %s | %s | %s | %s%n",
+                x.getId(), x.getFullName(), x.getEmail(), x.getPhone(), x.getStatus());
     }
 
     private void printApplications(List<ExamApplication> items) {
@@ -213,6 +254,47 @@ public final class ConsoleUi {
                 x.getScore() == null ? "—" : x.getScore().toString());
     }
 
+    private void printExaminers(List<Examiner> items) {
+        if (items.isEmpty()) { System.out.println("Экзаменаторы не найдены."); return; }
+        for (Examiner x : items) System.out.printf("%d | %s | %s | %s | %s%n",
+                x.getId(), x.getFullName(), x.getEmail(), x.getSubject(), x.getStatus());
+    }
+
+    private int menuChoice() {
+        while (true) {
+            try { return integer("Действие: "); }
+            catch (IllegalArgumentException ex) { System.out.println("Ошибка: " + ex.getMessage()); }
+        }
+    }
+
+    private boolean ascending() {
+        int choice = integer("Порядок: 1 — прямой, 2 — обратный: ");
+        if (choice != 1 && choice != 2) throw new IllegalArgumentException("Введите 1 или 2.");
+        return choice == 1;
+    }
+
+    private ApplicantStatus applicantStatus() {
+        return parseEnum(line("Статус ACTIVE/BLOCKED: "), ApplicantStatus.class);
+    }
+
+    private ApplicationStatus applicationStatus() {
+        return parseEnum(line("Статус NEW/APPROVED/COMPLETED/CANCELLED: "), ApplicationStatus.class);
+    }
+
+    private ExaminerStatus examinerStatus() {
+        return parseEnum(line("Статус ACTIVE/INACTIVE: "), ExaminerStatus.class);
+    }
+
+    private <E extends Enum<E>> E parseEnum(String text, Class<E> type) {
+        try { return Enum.valueOf(type, text.trim().toUpperCase(Locale.ROOT)); }
+        catch (IllegalArgumentException ex) { throw new IllegalArgumentException("Неизвестный статус."); }
+    }
+
+    private String optional(String prompt, String old) {
+        String value = line(prompt).trim();
+        return value.isEmpty() ? old : value;
+    }
+
     private String line(String prompt) {
         System.out.print(prompt);
         if (!input.hasNextLine()) throw new EndOfInput();
@@ -220,34 +302,34 @@ public final class ConsoleUi {
     }
 
     private int integer(String prompt) {
-        String value = line(prompt).trim();
-        try { return Integer.parseInt(value); }
-        catch (NumberFormatException ex) { throw new BusinessException("Введите целое число."); }
+        try { return Integer.parseInt(line(prompt).trim()); }
+        catch (NumberFormatException ex) { throw new IllegalArgumentException("Введите целое число."); }
     }
 
     private long positiveId() {
         long id = parseLong(line("ID: ").trim());
-        if (id <= 0) throw new BusinessException("ID должен быть положительным числом.");
+        if (id <= 0) throw new IllegalArgumentException("ID должен быть положительным.");
         return id;
     }
 
-    private long parseLong(String value) {
-        try { return Long.parseLong(value); }
-        catch (NumberFormatException ex) { throw new BusinessException("ID должен быть целым числом."); }
+    private long parseLong(String text) {
+        try { return Long.parseLong(text); }
+        catch (NumberFormatException ex) { throw new IllegalArgumentException("ID должен быть целым числом."); }
     }
 
     private LocalDateTime dateTime(String prompt) { return parseDateTime(line(prompt).trim()); }
-    private LocalDateTime parseDateTime(String value) {
-        try { return LocalDateTime.parse(value, DATE_TIME); }
-        catch (DateTimeParseException ex) { throw new BusinessException("Дата и время: дд.мм.гггг чч:мм."); }
+
+    private LocalDateTime parseDateTime(String text) {
+        try { return LocalDateTime.parse(text, DATE_TIME); }
+        catch (DateTimeParseException ex) { throw new IllegalArgumentException("Дата: дд.мм.гггг чч:мм."); }
     }
 
     private LocalDate date(String prompt) {
         try { return LocalDate.parse(line(prompt).trim(), DATE); }
-        catch (DateTimeParseException ex) { throw new BusinessException("Дата: дд.мм.гггг."); }
+        catch (DateTimeParseException ex) { throw new IllegalArgumentException("Дата: дд.мм.гггг."); }
     }
 
-    private static final class EndOfInput extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-    }
+    private void unknown() { System.out.println("Нет такого пункта меню."); }
+
+    private static final class EndOfInput extends RuntimeException { }
 }
