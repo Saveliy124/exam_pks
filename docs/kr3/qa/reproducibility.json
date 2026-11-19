@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-19",
+  "testedGitCommit": "09c21353808807529dd1c19b3311921ebde562a3",
+  "source": "git archive into a new directory with spaces, without target or local configuration",
+  "cleanBuild": "PASS",
+  "postgreSqlIntegration": "PASS",
+  "junit": [
+    {
+      "name": "ru.mirea.examcenter.RulesTest",
+      "tests": "35",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.FiltersStatisticsTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.ExportTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.kr3.BusinessRulesTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.kr3.FullApiIT",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0"
+    }
+  ],
+  "githubActions": {
+    "result": "success",
+    "url": "https://github.com/Saveliy124/exam_pks/actions/runs/44479827383"
+  },
+  "composeDownUpPreservesData": true,
+  "setupRepeatedWithoutChangingRows": true,
+  "localSecretsInPublishedFiles": false
+}
