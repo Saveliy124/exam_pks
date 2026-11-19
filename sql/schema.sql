@@ -48,3 +48,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_active_exam_slot
 
 CREATE INDEX IF NOT EXISTS idx_exam_applications_date ON exam_applications(scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_exam_applications_status ON exam_applications(status);
+
+-- Email регистронезависим и в сервисе, и при конкурентных JDBC-запросах.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_applicants_email_ci ON applicants(lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS uq_examiners_email_ci ON examiners(lower(email));

@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-19",
+  "browser": "Chromium (Yandex)",
+  "results": [
+    {
+      "name": "Login, mandatory password replacement, cookie security and refresh after reload",
+      "status": "PASS"
+    },
+    {
+      "name": "User creation with viewer and operator roles",
+      "status": "PASS"
+    },
+    {
+      "name": "Candidate, examiner and discipline create and edit",
+      "status": "PASS"
+    },
+    {
+      "name": "Application create, update, combined filters and CSV download",
+      "status": "PASS"
+    },
+    {
+      "name": "Pinned notes create, escaped HTML, edit and delete",
+      "status": "PASS"
+    },
+    {
+      "name": "Bulk tagging, archive, restore and permanent deletion",
+      "status": "PASS"
+    },
+    {
+      "name": "CSV preview, invalid rows, import, UPSERT and sample download",
+      "status": "PASS"
+    },
+    {
+      "name": "Pagination, sorting, network failure and recovery",
+      "status": "PASS"
+    },
+    {
+      "name": "Audit search, analytics, Swagger and responsive layout",
+      "status": "PASS"
+    },
+    {
+      "name": "Viewer restrictions and operator permissions in real browser",
+      "status": "PASS"
+    },
+    {
+      "name": "User reset and disable; profile password change",
+      "status": "PASS"
+    }
+  ],
+  "unhandledJavaScriptErrors": []
+}

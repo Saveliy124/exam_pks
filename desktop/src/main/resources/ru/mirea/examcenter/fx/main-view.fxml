@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.examcenter.fx.controller.MainController" styleClass="app-root">
+ <left><VBox prefWidth="192" minWidth="192" styleClass="sidebar" spacing="10">
+  <padding><Insets top="26" right="14" bottom="24" left="14"/></padding>
+  <Label text="ЭЦ" styleClass="brand-mark"/>
+  <Label text="Экзаменационный&#10;центр" styleClass="brand" wrapText="true"/>
+  <Label fx:id="modeLabel" styleClass="sidebar-note" wrapText="true"/>
+  <Label text="РАБОЧЕЕ ПРОСТРАНСТВО" styleClass="nav-caption"/>
+  <ToggleButton fx:id="applicationsNav" text="Заявки на экзамены" onAction="#showApplications" maxWidth="Infinity" styleClass="nav-button"/>
+  <ToggleButton fx:id="applicantsNav" text="Кандидаты" onAction="#showApplicants" maxWidth="Infinity" styleClass="nav-button"/>
+  <ToggleButton fx:id="examinersNav" text="Экзаменаторы" onAction="#showExaminers" maxWidth="Infinity" styleClass="nav-button"/>
+  <ToggleButton fx:id="statisticsNav" text="Статистика" onAction="#showStatistics" maxWidth="Infinity" styleClass="nav-button"/>
+  <Region VBox.vgrow="ALWAYS"/>
+  <Button fx:id="refreshButton" text="Обновить данные" onAction="#refresh" maxWidth="Infinity" styleClass="nav-refresh"/>
+  <Label text="Экзамены, люди&#10;и результаты — в одном месте" styleClass="sidebar-note" wrapText="true"/>
+ </VBox></left>
+ <center><StackPane fx:id="content"/></center>
+ <bottom><HBox alignment="CENTER_LEFT" spacing="10" styleClass="status-bar">
+  <ProgressIndicator fx:id="progress" prefWidth="18" prefHeight="18" maxWidth="18" maxHeight="18"/>
+  <Label fx:id="statusLabel" text="Подключение…" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+ </HBox></bottom>
+</BorderPane>

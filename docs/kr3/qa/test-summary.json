@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-19",
+  "junit": [
+    {
+      "name": "ru.mirea.examcenter.RulesTest",
+      "tests": "35",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.FiltersStatisticsTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.ExportTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.kr3.BusinessRulesTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "ru.mirea.examcenter.kr3.FullApiIT",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "junitTests": 76,
+  "junitFailures": 0,
+  "browserScenarios": 11,
+  "browserFailures": 0,
+  "unhandledJavaScriptErrors": []
+}

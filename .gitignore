@@ -3,4 +3,26 @@ target/
 .maven-cache/
 .idea/
 .DS_Store
+
+# Учебный пример преподавателя: отдельный проект со своим .env.
+student-hub-suite-rebuilt/
+dist/
 ~$*.docx
+
+.env
+config/database.properties
+backups/
+logs/
+export/
+.DS_Store
+
+**/target/
+config/client.properties
+
+# KR3 local dependencies and test traces
+**/node_modules/
+**/test-results/
+**/playwright-report/
+**/__pycache__/
+*.pyc
+docs/kr3/qa/private/

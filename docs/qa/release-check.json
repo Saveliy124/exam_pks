@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-23",
+  "clean_directory_with_spaces": true,
+  "secrets_in_source_archive": false,
+  "architecture": "JavaFX -> REST -> Spring Boot -> PostgreSQL",
+  "tested_code_sha256": "7aa63a7c419cd66620c72e7115b12a079ad7f64b6636fa1d23491afa7df3ef48",
+  "source_archive_files": 160,
+  "fresh_database_counts": {
+    "applicants": 5,
+    "applications": 10,
+    "examiners": 5
+  },
+  "setup_idempotent": true,
+  "unit_jdbc_http_tests": "PASS"
+}

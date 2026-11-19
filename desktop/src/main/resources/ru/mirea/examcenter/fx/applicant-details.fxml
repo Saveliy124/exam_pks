@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.examcenter.fx.controller.ApplicantDetailsController" prefWidth="780" spacing="16" styleClass="form-root">
+ <padding><Insets top="28" right="28" bottom="24" left="28"/></padding>
+ <Label fx:id="nameLabel" styleClass="dialog-title" wrapText="true"/>
+ <HBox spacing="18"><Label fx:id="emailLabel"/><Label fx:id="statusLabel" styleClass="status-pill"/></HBox>
+ <Label fx:id="phoneLabel" styleClass="subtitle"/>
+ <Label fx:id="totalLabel" styleClass="section-title"/>
+ <TableView fx:id="linkedTable" prefHeight="280" fixedCellSize="40"><columns>
+  <TableColumn fx:id="examColumn" text="Экзамен" prefWidth="270"/>
+  <TableColumn fx:id="dateColumn" text="Дата экзамена" prefWidth="180"/>
+  <TableColumn fx:id="statusColumn" text="Статус" prefWidth="150"/>
+  <TableColumn fx:id="scoreColumn" text="Балл" prefWidth="70"/>
+ </columns></TableView>
+ <HBox spacing="8">
+  <Button fx:id="newApplicationButton" text="Новая заявка" onAction="#newApplication" styleClass="primary"/>
+  <Button text="Показать в разделе заявок" onAction="#allApplications"/>
+  <Region HBox.hgrow="ALWAYS"/><Button text="Закрыть" onAction="#close" cancelButton="true"/>
+ </HBox>
+</VBox>

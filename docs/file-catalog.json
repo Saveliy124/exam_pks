@@ -1,0 +1,802 @@
+[
+  {
+    "path": ".dockerignore",
+    "purpose": "Ограничивает контекст сборки JAR и class HealthProbe. Локальная .env, база, Git и архив преподавателя не отправляются в Docker build.",
+    "links": "Dockerfile и scripts/setup.sh."
+  },
+  {
+    "path": ".env.example",
+    "purpose": "Шаблон имён БД, пользователя, локального пароля-заглушки и портов HTTP/БД. Это не действующие учётные данные.",
+    "links": "setup.sh создаёт реальную .env со случайным паролем; Compose читает её."
+  },
+  {
+    "path": ".gitignore",
+    "purpose": "Исключает секреты, config, сборки всех модулей, резервные копии, IDE-кэш и внешний Student Hub из Git.",
+    "links": "Git и структура всего проекта."
+  },
+  {
+    "path": "README.md",
+    "purpose": "Главная точка входа: актуальная архитектура, быстрый запуск, порты, команды тестов/сборки и ссылки на остальные документы.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "backend/Dockerfile",
+    "purpose": "Собирает runtime-образ Java 21 с executable JAR и отдельным HealthProbe. Запускает Java под непривилегированным UID 10001; явно задаёт права читаемости файлов и Europe/Moscow.",
+    "links": "backend/target, compose.yaml."
+  },
+  {
+    "path": "backend/pom.xml",
+    "purpose": "Spring Web/JDBC/Actuator/PostgreSQL, executable JAR и профили интеграционных/UI-тестов. Desktop подключён только в test-scope.",
+    "links": "Корневой pom, Dockerfile, scripts/test*.sh."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/Main.java",
+    "purpose": "Сохранённая точка входа диагностической консоли КР1. Не запускает HTTP-сервер и не является обычным способом работы пользователя.",
+    "links": "ConsoleUi и прежние сервисы; scripts/run-console.sh."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/ApplicantRepository.java",
+    "purpose": "Параметризованные SQL для кандидатов: INSERT/SELECT/UPDATE/DELETE, поиск email без регистра и проверка связанных заявок. В сервере получает соединение из Spring DataSource.",
+    "links": "ApplicantService; applicants и exam_applications; RepositoryChecks контролирует число изменённых строк."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/CenterRepository.java",
+    "purpose": "Читает три таблицы в одной read-only REPEATABLE READ транзакции. Возвращает целый согласованный снимок или откатывает неудавшееся чтение.",
+    "links": "CenterService; три репозитория используют переданное Connection; CenterSnapshot."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/Database.java",
+    "purpose": "Локальное JDBC-подключение для серверной диагностической консоли и самостоятельных тестов репозиториев. Читает свойства/окружение/локальный файл, задаёт тайм-ауты. В HTTP-сервере вместо него используется Spring DataSource.",
+    "links": "Main/ConsoleUi, TestDatabase, no-arg конструкторы репозиториев; JavaFX не содержит этот класс."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/ExamApplicationRepository.java",
+    "purpose": "SQL заявок, JOIN с кандидатом, проверка дубликата, вставка/изменение, смена статуса с проверкой исходного состояния. Различает SQL NULL и реальный нулевой балл.",
+    "links": "ExamApplicationService; exam_applications и applicants; RepositoryChecks."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/ExaminerRepository.java",
+    "purpose": "SQL справочника экзаменаторов и проверка уникальности email. Преобразует ResultSet в Examiner, закрывает JDBC-ресурсы.",
+    "links": "ExaminerService; таблица examiners; DataSource и RepositoryChecks."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/repository/RepositoryChecks.java",
+    "purpose": "Требует, чтобы изменение затронуло ровно одну строку. Иначе сообщает об устаревшей или исчезнувшей записи через SQLState 40001.",
+    "links": "Три репозитория; ApiExceptionHandler переводит в HTTP 409."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/ApiController.java",
+    "purpose": "Объявляет HTTP-маршруты для трёх сущностей, смены статуса, снимка, статистики и информации о сервере. Возвращает 201 с ID и Location при создании, 204 после изменения/удаления.",
+    "links": "ExamCenterFacade выполняет правила; ApiContracts описывает JSON; ApiExceptionHandler перехватывает ошибки."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/ApiExceptionHandler.java",
+    "purpose": "Единый перевод исключений в HTTP-коды и JSON code/field/message. Обрабатывает ввод, неизвестные ID, конфликты SQL, недоступную БД и неожиданные ошибки.",
+    "links": "Ошибки сервисов и JDBC; ApiClient читает JSON; технический журнал сервера сохраняет диагностику."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/BackendApplication.java",
+    "purpose": "Точка входа нашего Spring Boot. Запускает встроенный Tomcat, загружает application.yml, создаёт компоненты Spring и HTTP-маршруты.",
+    "links": "BackendConfiguration, ApiController, ApiExceptionHandler; запускается executable JAR из Dockerfile."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/BackendConfiguration.java",
+    "purpose": "Собирает серверные зависимости: Clock, три предметных сервиса, сервис снимка и расчёта статистики. Передаёт репозиториям транзакционную обёртку DataSource.",
+    "links": "Spring/Hikari создаёт DataSource; TransactionAwareDataSourceProxy связывает JDBC с @Transactional; ExamCenterFacade получает сервисы."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/ExamCenterFacade.java",
+    "purpose": "Единый серверный слой операций REST. Задаёт транзакции с откатом и для checked-исключений, проверяет наличие ID, делегирует предметные операции и выдаёт статистику.",
+    "links": "ApiController вызывает; ApplicantService/ExaminerService/ExamApplicationService сохраняют; CenterService делает снимок."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/HealthProbe.java",
+    "purpose": "Небольшая отдельная Java-программа без Spring-зависимостей. Проверяет HTTP health и завершает процесс с кодом 0 или 1 для Docker healthcheck.",
+    "links": "Dockerfile копирует class отдельно; compose.yaml запускает; /actuator/health проверяет также PostgreSQL."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/server/NotFoundException.java",
+    "purpose": "Обозначает запрос к отсутствующей записи. Отличает отсутствие объекта от неверно заполненной формы.",
+    "links": "ExamCenterFacade бросает; ApiExceptionHandler возвращает HTTP 404."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/service/ApplicantService.java",
+    "purpose": "Бизнес-операции кандидатов: нормализация полей/email, уникальность, получение и CRUD, запрет удаления при наличии заявок. Содержит также функции старой консоли.",
+    "links": "ApplicantRepository, Rules; Spring-сервер вызывает через ExamCenterFacade."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/service/CenterService.java",
+    "purpose": "Небольшой сервис загрузки полного снимка. Отделяет запрос данных от способа их отображения или расчёта.",
+    "links": "CenterRepository читает; ExamCenterFacade.snapshot и statistics используют результат."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/service/ExamApplicationService.java",
+    "purpose": "Проверяет активность и наличие кандидата, будущее время, отсутствие активного дубля, допустимость изменения и перехода статуса. Балл принимает только при корректном завершении.",
+    "links": "ApplicantService, Rules, Clock, ExamApplicationRepository; вызывается серверной фасадой."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/service/ExaminerService.java",
+    "purpose": "Правила и CRUD независимого справочника экзаменаторов: имя/email/предмет, статус и уникальность. Сохраняет вспомогательные поиски консоли.",
+    "links": "ExaminerRepository, Rules, ExamCenterFacade."
+  },
+  {
+    "path": "backend/src/main/java/ru/mirea/examcenter/ui/ConsoleUi.java",
+    "purpose": "Старое текстовое меню для сравнения с КР1 и диагностики. Расположено на серверной стороне и обращается к тем же правилам через JDBC.",
+    "links": "Main, три сервиса, XlsxExporter; основной GUI использует REST независимо от консоли."
+  },
+  {
+    "path": "backend/src/main/resources/application.yml",
+    "purpose": "HTTP-порт, внешняя конфигурация Spring DataSource/Hikari, строгие JSON-типы и Actuator health. Пароля в исходнике нет.",
+    "links": "BackendApplication, Compose environment и ApiClient."
+  },
+  {
+    "path": "backend/src/main/resources/database.properties",
+    "purpose": "Безопасные JDBC-значения по умолчанию без пароля только для старой диагностики/тестов. Основной сервер использует Spring application.yml.",
+    "links": "Database.java и локальный config/database.properties."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/DatabaseIT.java",
+    "purpose": "Проверки на настоящем PostgreSQL: CRUD трёх сущностей, правила заявок, уникальные индексы, устаревший переход и параметризованный SQL.",
+    "links": "TestDatabase, репозитории и предметные сервисы; только *_test."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/FxScenarioIT.java",
+    "purpose": "Сквозной пользовательский сценарий: реальные FXML/JavaFX, REST, сервер и тестовая PostgreSQL. Проверяет формы, CRUD, карточки, статусы, фильтры, Excel и восстановление после сетевой ошибки, сохраняет снимки.",
+    "links": "TestServer, TestDatabase, AppContext, TestDialogs; в Docker-прогоне сервер находится в отдельном контейнере."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/IntegrationSmoke.java",
+    "purpose": "Унаследованная самостоятельная проверка консольных сервисов и трёхлистового экспорта. Сохранена для сравнения с КР1; не входит в стандартное число JUnit-тестов.",
+    "links": "Предметные сервисы, репозитории, DataExporter; не запускается обычным GUI."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/RestApiIT.java",
+    "purpose": "Отправляет настоящие HTTP-запросы в Spring: CRUD, обход GUI-валидации, плохой JSON, коды ошибок, статистика, конкурентный дубль и транзакционный откат.",
+    "links": "TestServer, ApiClient, HttpClient, PostgreSQL; не подменяет репозитории mock-объектами."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/TestDatabase.java",
+    "purpose": "Подготавливает схему/демо-фикстуру, очищает только явно переданную БД с суффиксом _test и дополнительно проверяет current_database().",
+    "links": "Все интеграционные сценарии; Database и sql/schema.sql/demo.sql."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/TestServer.java",
+    "purpose": "Поднимает Spring на случайном HTTP-порту только с явно выбранной *_test БД. Для Docker-UI проверяет /api/info и совпадение тестовой БД перед любыми действиями.",
+    "links": "RestApiIT и FxScenarioIT; внешний адрес задаёт только scripts/test-docker-ui.sh."
+  },
+  {
+    "path": "backend/src/test/java/ru/mirea/examcenter/UnavailableDatabaseIT.java",
+    "purpose": "Запускает отдельный Spring с недоступной тестовой точкой БД. Проверяет HTTP 503 health/API и отсутствие паролей/stack trace в ответе.",
+    "links": "BackendApplication, ApiExceptionHandler и Hikari; рабочую БД не останавливает."
+  },
+  {
+    "path": "common/pom.xml",
+    "purpose": "Собирает общую библиотеку exam-common и подключает Apache POI для Excel.",
+    "links": "Корневой pom; используется backend и desktop."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/api/ApiContracts.java",
+    "purpose": "Определяет JSON-контракты: отдельные входные данные кандидата, экзаменатора, заявки и смены статуса; ID созданной записи, ошибку API и статистику. Поля id и createdAt нельзя подставить через запрос создания.",
+    "links": "ApiController принимает DTO; ApiClient и три клиентских адаптера отправляют/читают их; ExamCenterFacade выполняет операции."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/export/DataExporter.java",
+    "purpose": "Интерфейс экспорта: одна таблица текущего раздела или три списка для старой консоли. Отделяет формат файла от вызывающего интерфейса.",
+    "links": "XlsxExporter реализует; AppContext хранит реализацию; ConsoleUi использует старый трёхлистовый вариант."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/export/ExportTable.java",
+    "purpose": "Неизменяемый снимок одной экспортируемой таблицы: имя листа, заголовки и строки значений. Не зависит от JavaFX.",
+    "links": "ExportService формирует; XlsxExporter читает в фоновой задаче."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/export/XlsxExporter.java",
+    "purpose": "Создаёт XLSX через Apache POI. Записывает даты и числа с правильными типами, заголовки и автофильтр, сначала сохраняет временный файл и затем заменяет целевой.",
+    "links": "DataExporter, ExportTable, ExportTest; GUI выбирает путь через Dialogs."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/Applicant.java",
+    "purpose": "Объект кандидата с ID, именем, email, телефоном и статусом. Геттеры нужны таблицам и JSON; пустой конструктор и сеттеры позволяют Jackson восстановить объект из ответа.",
+    "links": "ApplicantRepository создаёт из SQL; ApplicantService проверяет изменения; ApplicantsController и ApplicantDetailsController отображают."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/ApplicantStatus.java",
+    "purpose": "Разрешённые состояния кандидата ACTIVE и BLOCKED. Перечисление исключает случайные значения в Java, Jackson и формах.",
+    "links": "Applicant, Rules, Filters, ApplicantService; Labels переводит подписи."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/ApplicationStatus.java",
+    "purpose": "Четыре состояния заявки NEW, APPROVED, COMPLETED, CANCELLED. Они образуют управляемый жизненный цикл.",
+    "links": "Rules задаёт переходы; StatusFormController запрашивает действие; SQL хранит имя enum."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/CenterSnapshot.java",
+    "purpose": "Согласованный набор трёх списков. Копирует списки в неизменяемые коллекции, чтобы один результат загрузки не менялся самопроизвольно.",
+    "links": "CenterRepository создаёт; API сериализует; AppContext раскладывает в ObservableList; StatisticsService считает показатели."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/ExamApplication.java",
+    "purpose": "Заявка с ID кандидата, его отображаемыми именем/email, экзаменом, временем, статусом, необязательным баллом и датой создания. Имя/email в запросе чтения получаются через JOIN.",
+    "links": "ExamApplicationRepository читает; ExamApplicationService меняет; ApplicationClient передаёт; ApplicationsController показывает."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/Examiner.java",
+    "purpose": "Объект экзаменатора: ID, ФИО, email, предмет и активность. Представляет отдельный справочник; связи назначения на заявку в исходной схеме нет.",
+    "links": "ExaminerRepository, ExaminerService, ExaminersController и PersonFormController."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/model/ExaminerStatus.java",
+    "purpose": "Разрешённые состояния экзаменатора ACTIVE и INACTIVE. Используются в форме, поиске и общем счётчике активных сотрудников.",
+    "links": "Examiner, ExaminerService, StatisticsService, Labels."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/ExportService.java",
+    "purpose": "Превращает модели в таблицу бизнес-значений с русскими заголовками. Сохраняет порядок переданного списка, не добавляет технические ID.",
+    "links": "BaseTableController передаёт отсортированные строки; ExportTable хранит снимок; XlsxExporter пишет файл."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/Filters.java",
+    "purpose": "Функции поиска по нескольким полям и совместных фильтров по статусу, периоду, кандидату, домену и предмету. Проверяет правильность диапазона дат.",
+    "links": "FX-контроллеры фильтруют снимок в памяти; ApiController фильтрует GET заявок; StatisticsService отбирает период."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/Labels.java",
+    "purpose": "Русские названия enum-статусов. Отделяет хранимые английские коды от подписей для человека.",
+    "links": "Cells, формы, ExportService и таблицы используют подписи."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/Rules.java",
+    "purpose": "Общие чистые проверки: длины и пробелы строк, email, обязательность поля, будущая дата, разрешённые переходы и балл. Не обращается к БД и не зависит от JavaFX.",
+    "links": "Формы быстро проверяют ввод; предметные сервисы повторяют правила на сервере; RulesTest проверяет границы."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/StatisticsService.java",
+    "purpose": "Чистый расчёт показателей по снимку и периоду: статусы, средний/минимум/максимум, предстоящие экзамены, доля завершённых и справочники. Clock позволяет контролировать время в тестах.",
+    "links": "BackendConfiguration создаёт; ExamCenterFacade вызывает и преобразует Optional в nullable JSON-поля; FiltersStatisticsTest проверяет."
+  },
+  {
+    "path": "common/src/main/java/ru/mirea/examcenter/service/ValidationException.java",
+    "purpose": "Ошибка понятного пользователю правила с ключом поля. Позволяет сообщить, что исправить, и подсветить именно это поле.",
+    "links": "Rules и сервисы бросают; ApiExceptionHandler превращает в JSON; ApiClient восстанавливает для BaseFormController."
+  },
+  {
+    "path": "common/src/main/resources/log4j2.component.properties",
+    "purpose": "Техническая настройка логирования библиотек Apache POI/Log4j.",
+    "links": "Apache POI и XlsxExporter."
+  },
+  {
+    "path": "common/src/test/java/ru/mirea/examcenter/ExportTest.java",
+    "purpose": "Читает созданный XLSX и проверяет порядок, заголовки, native даты/числа, отсутствие результата, пустой набор и безопасный текст ячеек.",
+    "links": "ExportService, XlsxExporter, Apache POI; временная папка JUnit."
+  },
+  {
+    "path": "common/src/test/java/ru/mirea/examcenter/FiltersStatisticsTest.java",
+    "purpose": "Проверяет совместные фильтры, включённые границы периода, точный домен и корректную статистику, включая пустой набор и нулевой балл.",
+    "links": "Filters, StatisticsService и модели общего модуля."
+  },
+  {
+    "path": "common/src/test/java/ru/mirea/examcenter/RulesTest.java",
+    "purpose": "Проверяет строки/email, обязательность, границы дат, статусы и диапазон баллов на фиксированном Clock без запуска БД.",
+    "links": "Rules, ValidationException и enum-статусы."
+  },
+  {
+    "path": "compose.yaml",
+    "purpose": "Объявляет PostgreSQL, наш backend и необязательный backend-demo, порты, healthcheck, сеть и постоянный volume. Сохраняет прежнее имя проекта, чтобы не потерять данные КР1.",
+    "links": ".env, backend/Dockerfile, docker/init, setup/demo scripts."
+  },
+  {
+    "path": "desktop/pom.xml",
+    "purpose": "Зависимости GUI/HTTP/JSON и javafx-maven-plugin. Не содержит PostgreSQL-драйвер и серверных runtime-зависимостей.",
+    "links": "common/pom.xml; run.sh и run.ps1."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/client/ApiClient.java",
+    "purpose": "Транспорт JavaFX: Java HttpClient, адрес backend, тайм-ауты, Jackson и JSON. Восстанавливает модели, ошибки поля и сетевые сообщения; не повторяет сохранение автоматически.",
+    "links": "ApiContracts, ApiException, ValidationException; все три HTTP-адаптера и AppContext."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/client/ApiException.java",
+    "purpose": "Клиентская ошибка сервера или сети с HTTP-кодом. Код 0 означает, что HTTP-ответ не получен или адрес некорректен.",
+    "links": "ApiClient создаёт; Errors переводит в текст для формы/диалога."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/client/ApplicantClient.java",
+    "purpose": "HTTP-операции кандидатов с именами методов, привычными существующим формам. Собирает ApplicantInput и вызывает POST/PUT/DELETE.",
+    "links": "PersonFormController, ApplicantsController → ApiClient → /api/applicants."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/client/ApplicationClient.java",
+    "purpose": "HTTP-создание, изменение, удаление и смена статуса заявки. Передаёт ID кандидата, время и балл через явные DTO.",
+    "links": "ApplicationFormController, ApplicationsController, StatusFormController → ApiClient."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/client/ExaminerClient.java",
+    "purpose": "HTTP-операции справочника экзаменаторов. Передаёт форму через JSON и читает ID новой записи.",
+    "links": "PersonFormController, ExaminersController → ApiClient → /api/examiners."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/AppContext.java",
+    "purpose": "Общий контекст клиента: HTTP-адаптеры, ObservableList, состояние загрузки, фоновые задачи, навигация и диалоги. После сохранения получает свежий снимок; повторное чтение не теряется.",
+    "links": "ApiClient, AsyncRunner, FXMLLoader и все FX-контроллеры; репозиториев и JDBC в нём нет."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/ExamCenterApplication.java",
+    "purpose": "Жизненный цикл JavaFX: локаль, AppContext, главное FXML, Scene/Stage, CSS, размеры окна и завершение фоновых задач.",
+    "links": "run.sh запускает; AppContext загружает main-view.fxml и запрашивает snapshot."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/ApplicantDetailsController.java",
+    "purpose": "Карточка кандидата с таблицей его заявок и переходами к фильтрованному списку/новой заявке. Блокирует новую заявку для заблокированного кандидата.",
+    "links": "applicant-details.fxml, AppContext.snapshot/Navigation, модели кандидата и заявки."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/ApplicantsController.java",
+    "purpose": "Колонки и действия кандидатов, поиск по имени/email/телефону, статус и домен, открытие карточки и формы.",
+    "links": "applicants-view.fxml, BaseTableController, PersonFormController, ApplicantDetailsController и ApplicantClient."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/ApplicationFormController.java",
+    "purpose": "Форма заявки с ComboBox кандидатов, названием, календарём и часами/минутами. Проверяет быстрые ошибки, передаёт сохранение серверу и сохраняет секунды старой даты, если пользователь её не менял.",
+    "links": "application-form.fxml, AppContext.applicants, Rules и ApplicationClient."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/ApplicationsController.java",
+    "purpose": "Колонки заявок, поиск/статус/период/кандидат, доступность переходов, открытие формы/карточки, удаление и связанная навигация.",
+    "links": "applications-view.fxml, Filters, Rules, ApplicationClient, ApplicationFormController и StatusFormController."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/BaseFormController.java",
+    "purpose": "Общие состояния формы, сопоставление ключей полей и элементов, показ валидации, блокировка закрытия во время отправки и завершение сохранения.",
+    "links": "AppContext.save, Errors, ValidationException; остальные контроллеры форм наследуют."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/BaseTableController.java",
+    "purpose": "Общая механика таблиц: выбор строки, FilteredList/SortedList, доступность действий, число записей, экспорт текущей выборки и подтверждение удаления.",
+    "links": "Три контроллера разделов, AppContext, Dialogs, ExportService и XlsxExporter."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/ExaminersController.java",
+    "purpose": "Колонки и действия экзаменаторов, поиск, фильтр статуса и предмета. Независимый CRUD справочника.",
+    "links": "examiners-view.fxml, BaseTableController, PersonFormController и ExaminerClient."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/MainController.java",
+    "purpose": "Навигация четырёх разделов, общая строка состояния и индикатор, повторное использование уже открытых экранов, переходы к связанному кандидату.",
+    "links": "main-view.fxml, AppContext.Navigation и контроллеры разделов; показывает подпись только для demo-режима."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/PersonFormController.java",
+    "purpose": "Одна переиспользуемая форма кандидата и экзаменатора: общие ФИО/email и различающееся поле телефон/предмет, режим просмотра и сохранение.",
+    "links": "person-form.fxml, Rules, ApplicantClient и ExaminerClient."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/StatisticsController.java",
+    "purpose": "Запрашивает показатели у Spring API при смене периода или снимка. Показывает числа и диаграмму; номер запроса защищает от позднего ответа для старого периода.",
+    "links": "statistics-view.fxml, ApiClient.statistics, Filters.period, AsyncRunner и ApiContracts.Statistics."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/controller/StatusFormController.java",
+    "purpose": "Диалог согласования, отмены и результата. Подсвечивает неверный балл/время и вызывает отдельный HTTP-переход статуса.",
+    "links": "status-form.fxml, Rules.transition, ApplicationClient.changeStatus."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/support/AsyncRunner.java",
+    "purpose": "Запускает медленные HTTP-запросы и экспорт в ограниченном пуле из трёх фоновых потоков через JavaFX Task. Результат и ошибку возвращает на поток интерфейса.",
+    "links": "AppContext и контроллеры; счётчик занятости управляет индикатором и доступностью действий."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/support/Cells.java",
+    "purpose": "Настраивает отображение колонок, дат, русских статусов и календарей. Хранит общие форматтеры, чтобы окна показывали данные одинаково.",
+    "links": "Labels, таблицы трёх разделов, формы и карточки."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/support/Dialogs.java",
+    "purpose": "Системный FileChooser для XLSX, подтверждение удаления и окно ошибки. В тесте заменяется, чтобы не зависеть от ручного выбора файла.",
+    "links": "BaseTableController, BaseFormController, Errors; FxScenarioIT.TestDialogs."
+  },
+  {
+    "path": "desktop/src/main/java/ru/mirea/examcenter/fx/support/Errors.java",
+    "purpose": "Понятные сообщения клиента: ошибка поля, HTTP/сеть, запись файла и непредвиденная проблема. Детали БД обрабатываются только на сервере.",
+    "links": "ApiException, ValidationException, Dialogs и формы."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/app.css",
+    "purpose": "Цвета, отступы, размеры и состояния таблиц/форм/кнопок, включая ошибки. Вся визуальная тема приложения.",
+    "links": "AppContext.style и FXML styleClass."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/applicant-details.fxml",
+    "purpose": "Карточка кандидата с таблицей связанных заявок и переходами.",
+    "links": "ApplicantDetailsController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/applicants-view.fxml",
+    "purpose": "Список кандидатов, фильтры статуса/домена и CRUD/экспорт.",
+    "links": "ApplicantsController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/application-form.fxml",
+    "purpose": "Выбор кандидата, экзамена и даты/времени, данные карточки и кнопки формы.",
+    "links": "ApplicationFormController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/applications-view.fxml",
+    "purpose": "Таблица заявок, поисковые поля/календарь периода, действия со статусом, карточками и экспортом.",
+    "links": "ApplicationsController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/examiners-view.fxml",
+    "purpose": "Список экзаменаторов, фильтры статуса/предмета и CRUD/экспорт.",
+    "links": "ExaminersController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/main-view.fxml",
+    "purpose": "Главный BorderPane, боковая навигация, область текущего экрана и строка статуса.",
+    "links": "MainController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/person-form.fxml",
+    "purpose": "Переиспользуемая форма кандидата/экзаменатора с общими полями и ошибками.",
+    "links": "PersonFormController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/statistics-view.fxml",
+    "purpose": "Период, подписи показателей, столбчатая диаграмма и сообщение об ошибке.",
+    "links": "StatisticsController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/ru/mirea/examcenter/fx/status-form.fxml",
+    "purpose": "Отдельное окно подтверждения статуса или ввода балла.",
+    "links": "StatusFormController через fx:controller, fx:id и onAction; AppContext.load; app.css."
+  },
+  {
+    "path": "desktop/src/main/resources/simplelogger.properties",
+    "purpose": "Формат технического журнала обычного JavaFX-клиента.",
+    "links": "SLF4J simple и Errors."
+  },
+  {
+    "path": "docker/init/01-test-db.sh",
+    "purpose": "Создаёт дополнительную *_test БД при первоначальном развёртывании пустого PostgreSQL volume.",
+    "links": "Compose postgres и test scripts; повторные сценарии также создают тестовую БД при необходимости."
+  },
+  {
+    "path": "docker/sample-override.yaml",
+    "purpose": "Локальные исправления портов/Compose готового примера Student Hub без перезаписи его исходников.",
+    "links": "scripts/sample-*.sh и docs/instructor-example.md."
+  },
+  {
+    "path": "docs/api.md",
+    "purpose": "Полная справка REST: методы, адреса, тела, статусы, ошибки и безопасный просмотр curl.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/architecture.md",
+    "purpose": "Техническое объяснение трёх модулей, транзакций, HTTP, потоков, снимков и границ версии.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/defense.md",
+    "purpose": "Сценарий показа и темы подготовки к защите версии Spring Boot.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/er-diagram.md",
+    "purpose": "Текстовая Mermaid-модель трёх таблиц КР1 и связи кандидата с заявками.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/er-diagram.svg",
+    "purpose": "Готовое изображение той же схемы для просмотра и защиты.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/file-catalog.json",
+    "purpose": "Машиночитаемый каталог назначения каждого файла; используется для полноты Word-руководства.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/instructor-example.md",
+    "purpose": "Отдельная инструкция и исторические доказательства развёртывания Student Hub преподавателя.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/kr1-archive.md",
+    "purpose": "Старый README КР1. Используется для истории, его команды не являются инструкцией текущего запуска.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/kr1-baseline.md",
+    "purpose": "Историческая фиксация состояния и резервных копий КР1 до изменений.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/qa/01-applications.png",
+    "purpose": "Доказательство проверки: главный список заявок.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/02-small-window.png",
+    "purpose": "Доказательство проверки: минимальный размер окна.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/03-applicants.png",
+    "purpose": "Доказательство проверки: раздел кандидатов.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/04-validation.png",
+    "purpose": "Доказательство проверки: ошибка формы.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/05-applicant-details.png",
+    "purpose": "Доказательство проверки: карточка кандидата и связанные заявки.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/06-application-form.png",
+    "purpose": "Доказательство проверки: форма новой заявки.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/07-result-form.png",
+    "purpose": "Доказательство проверки: ввод результата.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/08-filters.png",
+    "purpose": "Доказательство проверки: совместные фильтры и порядок строк.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/09-examiners.png",
+    "purpose": "Доказательство проверки: справочник экзаменаторов.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/10-examiner-card.png",
+    "purpose": "Доказательство проверки: карточка экзаменатора.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/11-statistics.png",
+    "purpose": "Доказательство проверки: серверная статистика.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/12-delete-confirmation.png",
+    "purpose": "Доказательство проверки: настоящее подтверждение удаления.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/client-dependencies.txt",
+    "purpose": "Доказательство проверки: runtime-дерево зависимостей клиента без PostgreSQL-драйвера и Spring-сервера.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/filtered.xlsx",
+    "purpose": "Доказательство проверки: XLSX, сопоставленный с текущей выборкой UI.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-javafx-check.txt",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-javafx-dashboard.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-javafx-login.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-javafx-students.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-web-check.json",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-web-dashboard.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-web-login.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/instructor-web-students.png",
+    "purpose": "Историческое доказательство проверки отдельного примера преподавателя Student Hub.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/kr1-data-verification.json",
+    "purpose": "Доказательство проверки: историческая построчная сверка данных при переносе КР1.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/release-check.json",
+    "purpose": "Доказательство проверки: проверки текущего архива и чистого развёртывания.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/runtime-check.json",
+    "purpose": "Доказательство проверки: состояние и адреса наших Docker-сервисов после проверки.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/spring-migration-data.json",
+    "purpose": "Доказательство проверки: сверка рабочей БД с резервной копией до Spring-перехода.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/qa/test-summary.json",
+    "purpose": "Доказательство проверки: машиночитаемые результаты текущих JUnit-проверок.",
+    "links": "docs/testing.md; соответствующий тест или docs/instructor-example.md."
+  },
+  {
+    "path": "docs/requirements-map.md",
+    "purpose": "Явно фиксирует переход к собственному backend и согласованную замену требования прямого JDBC из JavaFX.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/testing.md",
+    "purpose": "Фактический отчёт текущих проверок, окружение, результаты и непроверенные платформы.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/user-guide.md",
+    "purpose": "Пошаговое использование всех функций, формы/ограничения, сортировка/Excel, ошибки и восстановление.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "docs/Как работает приложение.docx",
+    "purpose": "Основной Word-гайд текущей версии: функции, архитектура, API, файлы, проверки и защита.",
+    "links": "README.md и полное руководство Word."
+  },
+  {
+    "path": "pom.xml",
+    "purpose": "Корневой Maven-агрегатор, версия Java 21, Spring Boot parent, общие тестовые зависимости и порядок модулей.",
+    "links": "common/pom.xml, desktop/pom.xml, backend/pom.xml"
+  },
+  {
+    "path": "run.ps1",
+    "purpose": "PowerShell-запуск клиента с JDK 21 и Maven, чтением HTTP-адреса и сборкой нужных модулей.",
+    "links": "desktop/pom.xml, scripts/setup.ps1, JAVA_HOME."
+  },
+  {
+    "path": "run.sh",
+    "purpose": "Выбирает JDK 21, собирает common/desktop, читает только HTTP-настройку клиента и запускает JavaFX из desktop/pom.xml. Не загружает пароль БД.",
+    "links": "java21.sh, config/client.properties, EXAM_API_URL, ExamCenterApplication."
+  },
+  {
+    "path": "scripts/backend-local.sh",
+    "purpose": "Запускает executable Spring JAR на компьютере разработчика, обычно на 8083, с подключением к опубликованному PostgreSQL.",
+    "links": "backend/pom.xml, .env, EXAM_DB_URL; удобен для просмотра восстановленной копии."
+  },
+  {
+    "path": "scripts/backup.sh",
+    "purpose": "Создаёт pg_dump рабочей БД в формате custom и удаляет незавершённый файл при ошибке.",
+    "links": "compose postgres и backups/; пароль берётся из локальной .env."
+  },
+  {
+    "path": "scripts/build-guide.py",
+    "purpose": "Собирает Word-руководство с использованием python-docx из актуальных пользовательских/технических документов и каталога файлов. Проверка страниц выполняется отдельно.",
+    "links": "docs/user-guide.md, architecture.md, api.md, file-catalog.json, testing.md, defense.md."
+  },
+  {
+    "path": "scripts/catalog-files.py",
+    "purpose": "Генерирует полный каталог каждого передаваемого файла с назначением и явными связями. Отказывает при неизвестном исходном Java/FXML-файле.",
+    "links": "docs/file-catalog.json и scripts/build-guide.py."
+  },
+  {
+    "path": "scripts/demo.sh",
+    "purpose": "Создаёт отдельную БД *_demo только при отсутствии, применяет схему/демо-данные, поднимает backend-demo и направляет GUI на порт 8082. Перед запуском клиента удаляет пароль БД из окружения.",
+    "links": "sql/demo.sql, compose.yaml, run.sh."
+  },
+  {
+    "path": "scripts/java21.sh",
+    "purpose": "Выбирает JDK 21 локально для команды и проверяет наличие Maven, не меняя глобальные настройки пользователя.",
+    "links": "Все shell-сценарии Java/Maven."
+  },
+  {
+    "path": "scripts/package-source.py",
+    "purpose": "Собирает переносимый ZIP собственных модулей, SQL, скриптов и документации. Исключает target, секреты и внешний проект преподавателя; пишет новый архив и совместимый старый alias.",
+    "links": "dist/exam-center-spring-source.zip и dist/exam-center-kr2-source.zip."
+  },
+  {
+    "path": "scripts/restore-copy.sh",
+    "purpose": "Восстанавливает dump только в новую БД с суффиксом _restore. Отказывается менять уже существующую БД и печатает команды запуска отдельного backend/клиента.",
+    "links": "backup.sh, backend-local.sh, EXAM_DB_URL, EXAM_API_URL."
+  },
+  {
+    "path": "scripts/run-console.sh",
+    "purpose": "Запускает сохранённую диагностическую консоль из backend-модуля через Maven exec. Это дополнительная утилита разработчика с прямым JDBC.",
+    "links": "Main, ConsoleUi, .env и предметные сервисы."
+  },
+  {
+    "path": "scripts/sample-client.sh",
+    "purpose": "Запускает исходный JavaFX-клиент преподавателя для изучения примера.",
+    "links": "student-hub-suite-rebuilt/javafx-client и JDK 21."
+  },
+  {
+    "path": "scripts/sample-prepare.sh",
+    "purpose": "Готовит локальную конфигурацию исходного Student Hub отдельно от нашей системы.",
+    "links": "student-hub-suite-rebuilt и docker/sample-override.yaml."
+  },
+  {
+    "path": "scripts/sample-start.sh",
+    "purpose": "Поднимает PostgreSQL и Spring Boot готового учебного примера и проверяет его health.",
+    "links": "sample-prepare.sh, Student Hub, порт 8080; не наш backend 8081."
+  },
+  {
+    "path": "scripts/sample-stop.sh",
+    "purpose": "Останавливает только систему преподавателя, сохраняя её volume.",
+    "links": "Student Hub Compose, sample-override.yaml."
+  },
+  {
+    "path": "scripts/setup.ps1",
+    "purpose": "Аналог подготовки для Windows: локальная конфигурация, база, Maven и Docker backend. В этой сессии Windows-фактическая проверка не проводилась.",
+    "links": "compose.yaml, SQL, run.ps1."
+  },
+  {
+    "path": "scripts/setup.sh",
+    "purpose": "Создаёт локальный пароль при первом запуске, поднимает PostgreSQL, применяет схему/seed только для пустой БД, собирает модули и запускает backend с ожиданием health.",
+    "links": "compose.yaml, .env, sql, Maven, config/client.properties."
+  },
+  {
+    "path": "scripts/test-docker-ui.sh",
+    "purpose": "Собирает серверный образ, запускает временный backend на *_test БД и случайном localhost-порту, выполняет UI-сценарий через Docker и удаляет только свой контейнер.",
+    "links": "Dockerfile, TestServer /api/info, FxScenarioIT; журнал backend/target/docker-ui-backend.log."
+  },
+  {
+    "path": "scripts/test-ui.sh",
+    "purpose": "Запускает UI-профиль Maven с открытием настоящих окон и тестовым Spring HTTP-сервером.",
+    "links": "FxScenarioIT, TestServer, TestDatabase."
+  },
+  {
+    "path": "scripts/test.sh",
+    "purpose": "Создаёт отдельную *_test БД, запускает Maven integration: чистые тесты, JDBC и REST/недоступность БД.",
+    "links": "TestDatabase, DatabaseIT, RestApiIT, UnavailableDatabaseIT."
+  },
+  {
+    "path": "scripts/verify-release.py",
+    "purpose": "Распаковывает текущий ZIP в новую папку с пробелами, создаёт отдельный Compose-проект, проверяет запуск/повторную подготовку и API-тесты, сверяет хеш кода и удаляет только собственный проверочный volume.",
+    "links": "package-source.py и docs/qa/release-check.json; рабочая БД не используется."
+  },
+  {
+    "path": "sql/demo.sql",
+    "purpose": "Согласованные демонстрационные кандидаты, все статусы и результаты, включая ноль и прошедшую согласованную заявку. Даты относительны моменту первоначального заполнения.",
+    "links": "scripts/demo.sh и TestDatabase.fixture."
+  },
+  {
+    "path": "sql/schema.sql",
+    "purpose": "Создаёт три таблицы, миграцию статуса кандидата, внешние ключи, CHECK и уникальные индексы email/активного экзамена. Повторное применение не очищает данные.",
+    "links": "setup scripts, TestDatabase, PostgreSQL."
+  },
+  {
+    "path": "sql/seed.sql",
+    "purpose": "Начальные учебные данные новой пустой рабочей БД. Не применяется повторно к заполненным таблицам.",
+    "links": "scripts/setup.sh/setup.ps1 и schema.sql."
+  },
+  {
+    "path": "Демонстрация КР2.command",
+    "purpose": "Запуск тренировочного окружения двойным щелчком после общей подготовки.",
+    "links": "scripts/setup.sh → scripts/demo.sh."
+  },
+  {
+    "path": "Запустить КР2.command",
+    "purpose": "Сохраняет знакомый запуск двойным щелчком на Mac: сначала подготовка серверов, затем GUI. Название оставлено для удобства текущего проекта.",
+    "links": "scripts/setup.sh → run.sh."
+  }
+]

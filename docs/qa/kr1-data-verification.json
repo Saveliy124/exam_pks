@@ -1,0 +1,20 @@
+{
+  "applicants": {
+    "rows": 6,
+    "matches_kr1": true,
+    "backup_restore_matches": true,
+    "sha256": "5d7aad9109e1c9850a679471c6491304fed5eaa889dc30e418f98d7b30820bd0"
+  },
+  "exam_applications": {
+    "rows": 10,
+    "matches_kr1": true,
+    "backup_restore_matches": true,
+    "sha256": "e595ffe0b580d2c7cbd22a4476c796518dc8afd045769b73ee567b3b3b5e3b3d"
+  },
+  "examiners": {
+    "rows": 5,
+    "matches_kr1": true,
+    "backup_restore_matches": true,
+    "sha256": "76230aad7feb7f2594a585236c41df5315e699afc9e76675a17d1806abda7d9f"
+  }
+}

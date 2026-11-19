@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-23",
+  "services": {
+    "8081": {
+      "health": {
+        "status": "UP"
+      },
+      "info": {
+        "database": "exam_center",
+        "version": "3.0.0",
+        "timezone": "Europe/Moscow"
+      },
+      "counts": {
+        "applicants": 6,
+        "applications": 10,
+        "examiners": 5
+      }
+    },
+    "8082": {
+      "health": {
+        "status": "UP"
+      },
+      "info": {
+        "timezone": "Europe/Moscow",
+        "version": "3.0.0",
+        "database": "exam_center_demo"
+      },
+      "counts": {
+        "applicants": 6,
+        "applications": 10,
+        "examiners": 4
+      }
+    }
+  },
+  "desktop_runtime_has_jdbc_or_spring": false
+}

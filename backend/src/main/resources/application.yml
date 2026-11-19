@@ -1,0 +1,33 @@
+server:
+  port: ${EXAM_SERVER_PORT:8081}
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: exam-center-backend
+  datasource:
+    url: ${EXAM_DB_URL:jdbc:postgresql://127.0.0.1:55433/exam_center}
+    username: ${EXAM_DB_USER:exam_center}
+    password: ${EXAM_DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 8
+      connection-timeout: 5000
+      data-source-properties:
+        connectTimeout: 5
+        socketTimeout: 15
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-null-for-primitives: true
+      accept-float-as-int: false
+    serialization:
+      write-dates-as-timestamps: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

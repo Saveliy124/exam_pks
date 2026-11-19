@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-23",
+  "all_tables_equal": true,
+  "backup": "exam_center-20261023-180625.dump",
+  "tables": [
+    {
+      "table": "applicants",
+      "count": 6,
+      "sha256": "dfde8eb3025dcc1bca0eb50d44abe867b36679b65f22676e1f20d73d82292783",
+      "equal_to_pre_spring_backup": true
+    },
+    {
+      "table": "exam_applications",
+      "count": 10,
+      "sha256": "c504ef5bd1c7056879b5d1bc28d2e632cba918beb640b3190aeef6be4b151779",
+      "equal_to_pre_spring_backup": true
+    },
+    {
+      "table": "examiners",
+      "count": 5,
+      "sha256": "fcfdee58f61f4f311621d4be22f1226ae8d2d4cad2131643cd99bfe77f8627ec",
+      "equal_to_pre_spring_backup": true
+    }
+  ]
+}

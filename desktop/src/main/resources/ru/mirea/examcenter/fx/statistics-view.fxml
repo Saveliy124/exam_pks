@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.examcenter.fx.controller.StatisticsController" fitToWidth="true" hbarPolicy="NEVER" styleClass="statistics-scroll">
+ <content><VBox spacing="18" styleClass="content-view">
+ <padding><Insets top="26" right="26" bottom="24" left="26"/></padding>
+ <Label text="Статистика центра" styleClass="page-title"/>
+ <Label text="Показатели по заявкам и результатам экзаменов" styleClass="subtitle"/>
+ <FlowPane hgap="12" vgap="10" styleClass="filter-panel">
+  <VBox spacing="5"><Label text="Дата экзамена с" styleClass="field-label"/><DatePicker fx:id="fromDate" promptText="Любая" prefWidth="165"/></VBox>
+  <VBox spacing="5"><Label text="по включительно" styleClass="field-label"/><DatePicker fx:id="toDate" promptText="Любая" prefWidth="165"/></VBox>
+  <VBox spacing="5"><Label text=" " styleClass="field-label"/><Button text="За всё время" onAction="#reset"/></VBox>
+ </FlowPane>
+ <Label fx:id="filterError" styleClass="error-text" wrapText="true"/>
+ <Label fx:id="periodLabel" styleClass="eyebrow"/>
+ <GridPane hgap="14" vgap="14"><columnConstraints>
+  <ColumnConstraints percentWidth="33.33"/><ColumnConstraints percentWidth="33.33"/><ColumnConstraints percentWidth="33.34"/>
+ </columnConstraints><children><VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="0"><Label text="Всего заявок" styleClass="stat-label"/><Label fx:id="totalValue" text="—" styleClass="stat-value"/><Label text="За выбранный период" styleClass="stat-note"/></VBox>
+<VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0"><Label text="Предстоящие экзамены" styleClass="stat-label"/><Label fx:id="upcomingValue" text="—" styleClass="stat-value"/><Label text="Новые и согласованные" styleClass="stat-note"/></VBox>
+<VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="2" GridPane.rowIndex="0"><Label text="Средний балл" styleClass="stat-label"/><Label fx:id="averageValue" text="—" styleClass="stat-value"/><Label text="Завершённые экзамены" styleClass="stat-note"/></VBox>
+<VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="1"><Label text="Доля завершённых" styleClass="stat-label"/><Label fx:id="percentValue" text="—" styleClass="stat-value"/><Label text="От всех заявок периода" styleClass="stat-note"/></VBox>
+<VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="1"><Label text="Минимальный балл" styleClass="stat-label"/><Label fx:id="minValue" text="—" styleClass="stat-value"/><Label text="Завершённые экзамены" styleClass="stat-note"/></VBox>
+<VBox styleClass="stat-card" spacing="8" GridPane.columnIndex="2" GridPane.rowIndex="1"><Label text="Максимальный балл" styleClass="stat-label"/><Label fx:id="maxValue" text="—" styleClass="stat-value"/><Label text="Завершённые экзамены" styleClass="stat-note"/></VBox></children></GridPane>
+ <VBox styleClass="chart-panel" spacing="8">
+  <Label text="Заявки по статусам" styleClass="section-title"/>
+  <BarChart fx:id="statusChart" prefHeight="245" minHeight="230" animated="false" legendVisible="false" categoryGap="42" barGap="8">
+   <xAxis><CategoryAxis tickLabelRotation="0"/></xAxis>
+   <yAxis><NumberAxis label="Заявки" minorTickVisible="false" tickUnit="1"/></yAxis>
+  </BarChart>
+ </VBox>
+ <HBox spacing="24" styleClass="directory-summary">
+  <Label text="СПРАВОЧНИКИ · ЗА ВСЁ ВРЕМЯ" styleClass="eyebrow"/>
+  <Label text="Кандидатов:"/><Label fx:id="applicantsValue" styleClass="section-title"/>
+  <Label text="Активных экзаменаторов:"/><Label fx:id="examinersValue" styleClass="section-title"/>
+ </HBox>
+ <Label text="Период применяется к дате экзамена. Средний, минимальный и максимальный балл учитывают только завершённые экзамены. При отсутствии результатов показано тире." styleClass="table-hint" wrapText="true"/>
+ </VBox></content>
+</ScrollPane>

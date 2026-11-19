@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.examcenter.fx.controller.ApplicantsController" spacing="16" styleClass="content-view">
+ <padding><Insets top="26" right="26" bottom="22" left="26"/></padding>
+ <HBox alignment="CENTER_LEFT" spacing="16">
+  <VBox spacing="7" HBox.hgrow="ALWAYS"><Label text="Кандидаты" styleClass="page-title"/><Label text="Контакты, статус допуска и связанные заявки" styleClass="subtitle" wrapText="true"/></VBox>
+  <Button fx:id="exportButton" text="Экспорт в Excel" onAction="#export" styleClass="secondary"/>
+ </HBox>
+ <VBox spacing="10" styleClass="filter-panel">
+  <Label text="ПОИСК И ФИЛЬТРЫ" styleClass="eyebrow"/>
+  <TextField fx:id="searchField" promptText="ФИО, email или телефон"/>
+  <FlowPane hgap="12" vgap="10" alignment="CENTER_LEFT">
+   <VBox spacing="5"><Label text="Статус" styleClass="field-label"/><ComboBox fx:id="statusFilter" promptText="Все статусы" prefWidth="170"/></VBox>
+   <VBox spacing="5"><Label text="Домен email" styleClass="field-label"/><TextField fx:id="domainFilter" promptText="Например, example.org" prefWidth="235"/></VBox>
+   <VBox spacing="5"><Label text=" " styleClass="field-label"/><Button text="Сбросить" onAction="#reset" styleClass="quiet"/></VBox>
+  </FlowPane>
+
+  <Label fx:id="filterError" styleClass="error-text" wrapText="true"/>
+ </VBox>
+ <HBox alignment="CENTER_LEFT" spacing="8">
+  <Button fx:id="addButton" text="Добавить" onAction="#add" styleClass="primary"/>
+  <Button fx:id="editButton" text="Изменить" onAction="#edit"/>
+  <Button fx:id="viewButton" text="Карточка" onAction="#view"/>
+  <Button fx:id="deleteButton" text="Удалить" onAction="#deleteSelected" styleClass="danger"/>
+  <Region HBox.hgrow="ALWAYS"/><Label fx:id="countLabel" styleClass="count-label"/>
+ </HBox>
+ <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="170" fixedCellSize="40"><columns><TableColumn fx:id="nameColumn" text="ФИО" prefWidth="290" minWidth="180"/>
+<TableColumn fx:id="emailColumn" text="Email" prefWidth="290" minWidth="180"/>
+<TableColumn fx:id="phoneColumn" text="Телефон" prefWidth="195" minWidth="140"/>
+<TableColumn fx:id="statusColumn" text="Статус" prefWidth="145" minWidth="125"/></columns></TableView>
+
+ <Label text="Сортировка: нажмите заголовок столбца. Shift + щелчок — по нескольким полям." styleClass="table-hint" wrapText="true"/>
+</VBox>

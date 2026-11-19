@@ -1,0 +1,8 @@
+{
+  "name": "exam-center-web-checks",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Buildless web frontend; Playwright is used only for testing",
+  "devDependencies": { "playwright": "1.62.1" }
+}

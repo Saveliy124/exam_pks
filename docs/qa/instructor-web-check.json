@@ -1,0 +1,9 @@
+{
+  "health": "UP",
+  "http": 200,
+  "login": "administrator",
+  "webDashboard": true,
+  "studentsPage": true,
+  "groupsPage": true,
+  "checkedAt": "2026-10-19T14:04:56.603Z"
+}

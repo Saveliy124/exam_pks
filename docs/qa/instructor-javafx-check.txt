@@ -1,0 +1,2 @@
+Native JavaFX 21: login, administrator MainView, 5 tabs, students table: PASS
+2026-10-19T14:06:58.779666Z

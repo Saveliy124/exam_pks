@@ -1,0 +1,486 @@
+[
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/ExamCenterWebApplication.java",
+    "purpose": "Запускает Spring Boot и регистрирует типизированные параметры AppProperties. Встроенная тестовая учетная запись Spring отключена; вход работает только через собственный AuthService."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/AppProperties.java",
+    "purpose": "Описывает JWT, начального администратора, CORS, cookies, окончательное удаление и лимиты CSV. Spring собирает значения из application.yml и окружения."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/BootstrapAdmin.java",
+    "purpose": "При отсутствии пользователей создает администратора с BCrypt-хешем и обязательной сменой пароля. Секрет читает из окружения и не печатает."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/ClockConfiguration.java",
+    "purpose": "Создает Clock с московским часовым поясом для проверки будущей даты и момента завершения экзамена."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/FilterConfiguration.java",
+    "purpose": "Отключает повторную регистрацию security-фильтров в servlet-контейнере: они должны срабатывать один раз внутри цепочки Spring Security."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/HealthProbe.java",
+    "purpose": "Маленькая Java-программа без зависимостей Spring проверяет HTTP health. Docker вызывает ее для определения готовности сервера."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/OpenApiConfig.java",
+    "purpose": "Задает название и схему Bearer JWT в OpenAPI. Swagger используется для изучения REST-контрактов и демонстрации на защите."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/config/SecurityConfig.java",
+    "purpose": "Настраивает stateless SecurityFilterChain, права маршрутов, CORS, JSON 401/403 и защитные HTTP-заголовки. Подключает JWT и проверку временного пароля."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/AdminUserController.java",
+    "purpose": "REST управления пользователями с пагинацией, созданием, изменением и сбросом временного пароля. Доступ только ADMIN."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/AnalyticsController.java",
+    "purpose": "Возвращает аналитическую сводку сервиса AnalyticsService."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/ApplicationController.java",
+    "purpose": "REST заявок, страницы, фильтры, карточка, CRUD, архив, восстановление, массовые операции и CSV. Контроллер принимает DTO и проверяет роли."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/AuditController.java",
+    "purpose": "Закрытый для обычных сотрудников REST поиска и постраничного просмотра журнала аудита."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/AuthController.java",
+    "purpose": "Предоставляет login, refresh, logout, me и смену пароля. Web refresh передает в HttpOnly cookie, native refresh возвращает отдельным полем JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/DirectoryController.java",
+    "purpose": "REST кандидатов, экзаменаторов и дисциплин. Управление дисциплинами и экзаменаторами ограничено администратором."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/controller/NoteController.java",
+    "purpose": "REST заметок конкретной заявки. Список доступен для чтения, запись — оператору и администратору."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/Applicant.java",
+    "purpose": "JPA-модель кандидата из КР1 с UUID публичного API, контактами, статусом и версией. Заявки ссылаются на внутренний ключ кандидата."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ApplicantStatus.java",
+    "purpose": "Enum допустимых значений предметной области; используется JPA, DTO, бизнес-правилами и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ApplicationNote.java",
+    "purpose": "JPA-сущность заметки со ссылками на заявку и автора, текстом, закреплением, датами и @Version."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ApplicationStatus.java",
+    "purpose": "Enum допустимых значений предметной области; используется JPA, DTO, бизнес-правилами и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/AuditEvent.java",
+    "purpose": "Неизменяемое событие аудита с пользователем, типом, UUID сущности, временем, описанием и correlation ID."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/AuditedVersionedEntity.java",
+    "purpose": "Общий абстрактный JPA-класс: createdAt, updatedAt и @Version. Lifecycle callbacks заполняют даты при вставке и изменении."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/CsvImportPreview.java",
+    "purpose": "Сохраняет проверенные строки CSV, владельца, режим, SHA-256 файла, срок и отметку применения; предотвращает подмену и повторное применение."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ExamApplication.java",
+    "purpose": "JPA-модель существующей таблицы exam_applications. Сохраняет внутренний BIGINT и публикует UUID; содержит дисциплину, кандидата, статусы, показатели, теги, архив и @Version."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ExamDiscipline.java",
+    "purpose": "Справочная JPA-сущность с UUID, кодом, названием и активностью, на которую ссылаются заявки."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/Examiner.java",
+    "purpose": "JPA-модель справочника экзаменаторов КР1 с публичным UUID, предметом, активностью и версией."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/ExaminerStatus.java",
+    "purpose": "Enum допустимых значений предметной области; используется JPA, DTO, бизнес-правилами и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/RefreshSession.java",
+    "purpose": "Хранит SHA-256 refresh-токена, владельца, срок, отзыв и связь с заменившей сессией. Исходный refresh в таблице отсутствует."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/RiskLevel.java",
+    "purpose": "Enum допустимых значений предметной области; используется JPA, DTO, бизнес-правилами и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/Role.java",
+    "purpose": "Enum допустимых значений предметной области; используется JPA, DTO, бизнес-правилами и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/domain/UserAccount.java",
+    "purpose": "Учетная запись с BCrypt-хешем, ролями, активностью, временным паролем, блокировкой, версией и securityVersion."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/ApiError.java",
+    "purpose": "Единый JSON ошибки: время, HTTP-статус, код, сообщение, путь, correlation ID и ошибки отдельных полей."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/AuditDtos.java",
+    "purpose": "Выходная модель события аудита без Hibernate-связей и секретов."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/AuthDtos.java",
+    "purpose": "Контракты login, refresh, смены пароля, сведений о текущем пользователе и выдачи токенов; различает WEB и NATIVE."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/ExamDtos.java",
+    "purpose": "Входные и выходные DTO заявок, кандидатов, экзаменаторов, дисциплин, заметок, массовых действий и аналитики. Вход проверяется Bean Validation."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/ImportDtos.java",
+    "purpose": "DTO предварительной проверки, одноразового применения импорта и ошибок строк; режимы CREATE_ONLY и UPSERT."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/PageResponse.java",
+    "purpose": "Стабильный публичный DTO страницы: content, page, size, totalElements, totalPages, first и last."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/dto/UserDtos.java",
+    "purpose": "DTO администрирования пользователей. Запросы могут содержать временный пароль, ответы не содержат пароль или хеш."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/AppErrorController.java",
+    "purpose": "Обрабатывает стандартный servlet-маршрут ошибки и сохраняет корректный статус для HTML и JSON."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/AuthenticationFailedException.java",
+    "purpose": "Прикладное исключение соответствующего HTTP-сценария; GlobalExceptionHandler превращает его в единый ответ."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/BadRequestException.java",
+    "purpose": "Прикладное исключение соответствующего HTTP-сценария; GlobalExceptionHandler превращает его в единый ответ."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/ConflictException.java",
+    "purpose": "Прикладное исключение соответствующего HTTP-сценария; GlobalExceptionHandler превращает его в единый ответ."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/GlobalExceptionHandler.java",
+    "purpose": "Преобразует исключения в единый ApiError с HTTP-статусом. Подробности и stack trace остаются на сервере; HTML-навигация получает страницы ошибок."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/error/NotFoundException.java",
+    "purpose": "Прикладное исключение соответствующего HTTP-сценария; GlobalExceptionHandler превращает его в единый ответ."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/filter/ApplicationFilter.java",
+    "purpose": "Типизированные параметры поиска и всех фильтров, включая пару оператор/число и режим архива. Bean Validation проверяет диапазоны."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/filter/ApplicationSpecifications.java",
+    "purpose": "Строит Criteria API predicates с параметрами. Экранирует wildcard-символы свободного поиска; пользовательский текст не вставляется в SQL."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/ApplicantRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/ApplicationNoteRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/AuditEventRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/CsvImportPreviewRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/ExamApplicationRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/ExamDisciplineRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/ExaminerRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/RefreshSessionRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/repository/UserAccountRepository.java",
+    "purpose": "Spring Data JPA-репозиторий соответствующей сущности. Предоставляет типизированные запросы и, где нужно, блокировку строки для транзакций."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/AuthOriginFilter.java",
+    "purpose": "Проверяет Origin браузерных auth-запросов. Вместе с SameSite Strict ограничивает использование refresh-cookie с постороннего сайта."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/CurrentUserService.java",
+    "purpose": "Получает principal из SecurityContext и актуальную учетную запись для сервисов и авторства заметок."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/JwtAuthenticationFilter.java",
+    "purpose": "Достает Bearer JWT, проверяет подпись и актуальную учетную запись. Права перечитывает из базы; отдельный cookie принимает только на Swagger URL."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/JwtService.java",
+    "purpose": "Подписывает и проверяет access JWT, issuer и срок действия. Включает securityVersion для отзыва прежних токенов при смене пароля."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/PasswordChangeRequiredFilter.java",
+    "purpose": "Закрывает рабочие API для пользователя с временным паролем, оставляя доступ к смене пароля, данным своей учетной записи и выходу."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/PasswordPolicy.java",
+    "purpose": "Проверяет сложность, минимум 12 символов и максимум 72 байта UTF-8 для BCrypt, а также отсутствие логина в пароле."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/security/UserPrincipal.java",
+    "purpose": "Представляет текущего пользователя внутри Spring Security и преобразует роли в GrantedAuthority. В публичные DTO хеш пароля не включается."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/AnalyticsService.java",
+    "purpose": "В согласованной read-only транзакции вычисляет количества, среднюю готовность и группировки по дисциплине, статусу и риску."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/ApplicationService.java",
+    "purpose": "Основная бизнес-логика заявок. Проверяет версии, кандидата, дисциплину, даты и статусы, пересчитывает риск. Массовые действия выполняет независимыми транзакциями."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/AuditService.java",
+    "purpose": "Записывает значимые действия без секретов и предоставляет поиск журнала. Обычные изменения аудируются в транзакции изменения; входы — отдельно."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/AuthService.java",
+    "purpose": "Проверяет вход, выдает access JWT и серверную refresh-сессию, вращает refresh, отзывает сессии, меняет пароль. Повторное использование refresh отзывает активные сессии."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/CsvApplicationService.java",
+    "purpose": "Читает и проверяет CSV, сохраняет предварительный результат, применяет его один раз, сверяя версии. Экспортирует все строки фильтра пакетами по 100."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/DirectoryService.java",
+    "purpose": "Проверяет и сохраняет кандидатов, экзаменаторов и дисциплины, нормализует email, сверяет версии и создает события аудита."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/ExamMapper.java",
+    "purpose": "Преобразует JPA-сущности в выходные DTO внутри сервисной транзакции. Hibernate-объекты не попадают напрямую в контроллер."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/ExamRules.java",
+    "purpose": "Чистые правила допустимых переходов статусов, будущей даты и результата 0–100 после экзамена. Clock позволяет проверять границы времени."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/LoginAttemptService.java",
+    "purpose": "Сохраняет неудачные попытки входа и блокировку в отдельной транзакции с блокировкой строки пользователя. Счетчик не теряется при отказе входа."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/NoteService.java",
+    "purpose": "Хранит историю заметок, версии, закрепление и авторство. Оператор редактирует свои заметки, администратор — любые."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/RiskCalculator.java",
+    "purpose": "Вычисляет риск по статусу, готовности и документам. Используется обычным изменением заявки и массовой сменой статуса."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/service/UserAdminService.java",
+    "purpose": "Создает и изменяет учетные записи, хеширует временные пароли, проверяет версии и запрещает администратору отключить самого себя."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/web/CorrelationIdFilter.java",
+    "purpose": "Проверяет входящий correlation ID или создает новый, добавляет его в ответ и MDC журнала, затем очищает контекст потока."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/web/PageableFactory.java",
+    "purpose": "Разрешает только известные поля и направления сортировки. Проверяет номер страницы и ограничивает размер 100 записями; добавляет стабильный порядок по id."
+  },
+  {
+    "path": "web-backend/src/main/java/ru/mirea/examcenter/kr3/web/RequestMetadata.java",
+    "purpose": "Читает ограниченные метаданные запроса для аудита: correlation ID, реальный remoteAddr и user agent. Не доверяет подставленному X-Forwarded-For."
+  },
+  {
+    "path": "web-backend/src/main/resources/application.yml",
+    "purpose": "Настройки PostgreSQL, Hibernate validate, Flyway, multipart, Swagger, health, JWT, CORS и начального администратора. Реальные секреты приходят из окружения."
+  },
+  {
+    "path": "web-backend/src/main/resources/db/migration/V1__kr1_schema.sql",
+    "purpose": "Создает исходные три таблицы КР1, индексы и ограничения. IF NOT EXISTS позволяет обработать заранее перенесенную копию."
+  },
+  {
+    "path": "web-backend/src/main/resources/db/migration/V2__security_and_exam_workflow.sql",
+    "purpose": "Добавляет пользователей, роли, сессии, аудит, дисциплины, UUID, версии, архив, теги, заметки и CSV previews. Дисциплины строит из прежних заявок."
+  },
+  {
+    "path": "web-backend/src/main/resources/db/migration/V3__empty_database_examples.sql",
+    "purpose": "Добавляет небольшой учебный набор только если все три исходные таблицы пусты. Перенесенные пользовательские записи не дополняет."
+  },
+  {
+    "path": "web-backend/src/main/resources/db/migration/V4__discipline_slot_integrity.sql",
+    "purpose": "Защищает уникальность активной записи кандидата по UUID дисциплины и времени, в том числе после переименования дисциплины."
+  },
+  {
+    "path": "web-backend/src/test/java/ru/mirea/examcenter/kr3/BusinessRulesTest.java",
+    "purpose": "16 независимых проверок границ риска, времени, переходов, нулевого балла, политики паролей, фильтров, сортировки и CSV."
+  },
+  {
+    "path": "web-backend/src/test/java/ru/mirea/examcenter/kr3/FullApiIT.java",
+    "purpose": "16 интеграционных сценариев полной цепочки Spring Security → REST → сервисы → JPA → PostgreSQL. Включает конфликт двух одновременных изменений."
+  },
+  {
+    "path": "web/api.js",
+    "purpose": "HTTP-клиент браузера: JSON, Bearer JWT в памяти, одно общее обновление access при 401, logout и скачивание файлов. Refresh доступен только серверу через cookie."
+  },
+  {
+    "path": "web/app.js",
+    "purpose": "Все экраны, формы, таблицы, диалоги, фильтры и действия пользователя. Показывает ошибки, учитывает роли и экранирует вставляемый текст."
+  },
+  {
+    "path": "web/errors/400.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/401.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/403.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/404.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/405.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/408.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/409.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/410.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/413.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/415.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/422.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/429.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/4xx.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/500.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/502.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/503.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/504.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/5xx.html",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/errors/error.css",
+    "purpose": "Статическое HTML-представление соответствующей HTTP-ошибки или общие стили таких страниц. Возвращается с исходным статусом без раскрытия stack trace."
+  },
+  {
+    "path": "web/favicon.svg",
+    "purpose": "Векторная иконка вкладки браузера."
+  },
+  {
+    "path": "web/index.html",
+    "purpose": "Минимальная HTML-оболочка веб-приложения: контейнер, стили и JavaScript-модуль. Раздается тем же сервером, что и API."
+  },
+  {
+    "path": "web/package.json",
+    "purpose": "Зависимость Playwright только для тестирования. Фронтенду для запуска не нужны npm, Node.js или сборщик."
+  },
+  {
+    "path": "web/styles.css",
+    "purpose": "Внешний вид и адаптивная компоновка экранов, таблиц, форм, окон и навигации для широкого и узкого экрана."
+  },
+  {
+    "path": "web-backend/pom.xml",
+    "purpose": "Maven-зависимости Spring Web, Security, JPA, Validation, Flyway, JWT, CSV, OpenAPI и тестов. Копирует web-ресурсы в JAR; профиль kr3-integration запускает IT."
+  },
+  {
+    "path": "web-backend/Dockerfile",
+    "purpose": "Упаковывает собранный JAR и HealthProbe в Java 21 JRE. Приложение выполняется от непривилегированного пользователя."
+  },
+  {
+    "path": "web-backend/docker-compose.yml",
+    "purpose": "Запускает отдельные PostgreSQL 17 и backend, передает окружение, ограничивает порты localhost, настраивает healthchecks и постоянный том."
+  },
+  {
+    "path": "Запустить КР3.command",
+    "purpose": "Mac-ярлык запуска подготовки КР3 и открытия localhost в браузере."
+  },
+  {
+    "path": ".github/workflows/kr3.yml",
+    "purpose": "GitHub Actions: сборка и unit-тесты, затем полные API-тесты на PostgreSQL 17 в отдельной тестовой базе."
+  },
+  {
+    "path": "scripts/kr3-browser-test.mjs",
+    "purpose": "Проводит 11 сквозных браузерных сценариев: вход, роли, CRUD, заметки, архив, CSV, страницы, сбои сети, Swagger, адаптивность и пароли."
+  },
+  {
+    "path": "scripts/kr3-build-guide.py",
+    "purpose": "Создает этот Word-файл, каталог файлов и отчет тестов из исходной документации и результатов проверок."
+  },
+  {
+    "path": "scripts/kr3-check-data.py",
+    "purpose": "Сравнивает исходные поля трех таблиц КР1 с перенесенной базой КР3 и сохраняет только количества и SHA-256, без личных данных."
+  },
+  {
+    "path": "scripts/kr3-env.py",
+    "purpose": "Добавляет недостающие случайные секреты в .env, не меняет имеющиеся значения и закрывает доступ к файлу другим пользователям."
+  },
+  {
+    "path": "scripts/kr3-start.sh",
+    "purpose": "Проверяет Java, Maven и Docker, создает настройки, поднимает базу, однократно копирует КР1 из действующей КР2, собирает и запускает КР3."
+  },
+  {
+    "path": "scripts/kr3-stop.sh",
+    "purpose": "Останавливает только Compose-проект КР3 без удаления тома PostgreSQL."
+  },
+  {
+    "path": "scripts/kr3-test-api.py",
+    "purpose": "Пересоздает только отдельную *_test базу, передает секреты через окружение и запускает unit и PostgreSQL интеграционные тесты."
+  },
+  {
+    "path": "scripts/kr3-test-browser.py",
+    "purpose": "Поднимает временный Docker backend на отдельной *_test базе и случайном localhost-порту, запускает Playwright и удаляет свой контейнер."
+  }
+]

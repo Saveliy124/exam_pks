@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.mirea.examcenter.fx.controller.ApplicationsController" spacing="16" styleClass="content-view">
+ <padding><Insets top="26" right="26" bottom="22" left="26"/></padding>
+ <HBox alignment="CENTER_LEFT" spacing="16">
+  <VBox spacing="7" HBox.hgrow="ALWAYS"><Label text="Заявки на экзамены" styleClass="page-title"/><Label text="Расписание, согласование и результаты сдачи" styleClass="subtitle" wrapText="true"/></VBox>
+  <Button fx:id="exportButton" text="Экспорт в Excel" onAction="#export" styleClass="secondary"/>
+ </HBox>
+ <VBox spacing="10" styleClass="filter-panel">
+  <Label text="ПОИСК И ФИЛЬТРЫ" styleClass="eyebrow"/>
+  <TextField fx:id="searchField" promptText="Имя кандидата, email или название экзамена"/>
+  <FlowPane hgap="12" vgap="10" alignment="CENTER_LEFT">
+   <VBox spacing="5"><Label text="Статус" styleClass="field-label"/><ComboBox fx:id="statusFilter" promptText="Все статусы" prefWidth="170"/></VBox>
+   <VBox spacing="5"><Label text="Дата экзамена с" styleClass="field-label"/><DatePicker fx:id="fromDate" promptText="Любая" prefWidth="155"/></VBox>
+<VBox spacing="5"><Label text="по включительно" styleClass="field-label"/><DatePicker fx:id="toDate" promptText="Любая" prefWidth="155"/></VBox>
+   <VBox spacing="5"><Label text=" " styleClass="field-label"/><Button text="Сбросить" onAction="#reset" styleClass="quiet"/></VBox>
+  </FlowPane>
+  <Label fx:id="applicantFilterLabel" styleClass="filter-note" wrapText="true"/>
+  <Label fx:id="filterError" styleClass="error-text" wrapText="true"/>
+ </VBox>
+ <HBox alignment="CENTER_LEFT" spacing="8">
+  <Button fx:id="addButton" text="Добавить" onAction="#add" styleClass="primary"/>
+  <Button fx:id="editButton" text="Изменить" onAction="#edit"/>
+  <Button fx:id="viewButton" text="Карточка" onAction="#view"/>
+  <Button fx:id="deleteButton" text="Удалить" onAction="#deleteSelected" styleClass="danger"/>
+  <Region HBox.hgrow="ALWAYS"/><Label fx:id="countLabel" styleClass="count-label"/>
+ </HBox>
+ <TableView fx:id="table" VBox.vgrow="ALWAYS" minHeight="170" fixedCellSize="40"><columns><TableColumn fx:id="nameColumn" text="Кандидат" prefWidth="190" minWidth="130"/>
+<TableColumn fx:id="emailColumn" text="Email" prefWidth="190" minWidth="130"/>
+<TableColumn fx:id="examColumn" text="Экзамен" prefWidth="155" minWidth="115"/>
+<TableColumn fx:id="dateColumn" text="Дата экзамена" prefWidth="150" minWidth="135"/>
+<TableColumn fx:id="statusColumn" text="Статус" prefWidth="125" minWidth="115"/>
+<TableColumn fx:id="scoreColumn" text="Балл" prefWidth="65" minWidth="55"/>
+<TableColumn fx:id="createdColumn" text="Создана" prefWidth="150" minWidth="135"/></columns></TableView>
+ <FlowPane hgap="8" vgap="8">
+<Button fx:id="approveButton" text="Согласовать" onAction="#approve" styleClass="secondary"/>
+<Button fx:id="completeButton" text="Записать результат" onAction="#complete" styleClass="secondary"/>
+<Button fx:id="cancelButton" text="Отменить заявку" onAction="#cancel"/>
+<Button fx:id="applicantButton" text="Кандидат и его заявки" onAction="#applicant"/>
+</FlowPane>
+ <Label text="Сортировка: нажмите заголовок столбца. Shift + щелчок — по нескольким полям." styleClass="table-hint" wrapText="true"/>
+</VBox>

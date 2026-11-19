@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-19",
+  "tables": [
+    {
+      "table": "applicants",
+      "rows": 6,
+      "originalSha256": "5eea4f1f08eede6cb30e6a25343a1172666df5188ddffbf99b6566b6d31b132c",
+      "migratedSha256": "5eea4f1f08eede6cb30e6a25343a1172666df5188ddffbf99b6566b6d31b132c",
+      "identical": true
+    },
+    {
+      "table": "examiners",
+      "rows": 5,
+      "originalSha256": "b143e89f61d6cac2c777945ba3c6a688e301a2a137f936edc309823e06655759",
+      "migratedSha256": "b143e89f61d6cac2c777945ba3c6a688e301a2a137f936edc309823e06655759",
+      "identical": true
+    },
+    {
+      "table": "exam_applications",
+      "rows": 10,
+      "originalSha256": "14a69a71ddf26ea3dad9e22cc71776fe9a6d276016048d028d865ced9d42145b",
+      "migratedSha256": "14a69a71ddf26ea3dad9e22cc71776fe9a6d276016048d028d865ced9d42145b",
+      "identical": true
+    }
+  ]
+}

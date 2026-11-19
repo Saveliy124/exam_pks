@@ -1,0 +1,53 @@
+name: exam-center-kr3
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${EXAM_WEB_DB_NAME:-exam_center_kr3}
+      POSTGRES_USER: ${EXAM_WEB_DB_USER:-exam_web}
+      POSTGRES_PASSWORD: ${EXAM_WEB_DB_PASSWORD:?Run scripts/kr3-start.sh first}
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    ports:
+      - "127.0.0.1:${EXAM_WEB_DB_PORT:-55435}:5432"
+    volumes:
+      - exam_web_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+  backend:
+    image: exam-center-web:3.0.0
+    build:
+      context: ..
+      dockerfile: web-backend/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${EXAM_WEB_DB_NAME:-exam_center_kr3}
+      SPRING_DATASOURCE_USERNAME: ${EXAM_WEB_DB_USER:-exam_web}
+      SPRING_DATASOURCE_PASSWORD: ${EXAM_WEB_DB_PASSWORD}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:?Run scripts/kr3-start.sh first}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.org}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-Администратор центра}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Run scripts/kr3-start.sh first}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PERMANENT_DELETE_ENABLED: ${PERMANENT_DELETE_ENABLED:-true}
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-15}
+      REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-14}
+      TZ: Europe/Moscow
+    ports:
+      - "127.0.0.1:${EXAM_WEB_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/app/probe", "ru.mirea.examcenter.kr3.config.HealthProbe"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+volumes:
+  exam_web_data:

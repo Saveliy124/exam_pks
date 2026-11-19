@@ -1,0 +1,6 @@
+# В исходном учебном compose опубликован внутренний порт 5433, хотя PostgreSQL слушает 5432.
+# !override поддерживается Docker Compose 2.24.4+ (на этом Mac проверена версия 5.5.1).
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:${POSTGRES_PORT:-55434}:5432"
