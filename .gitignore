@@ -13,7 +13,7 @@ dist/
 config/database.properties
 backups/
 logs/
-export/
+/export/
 .DS_Store
 
 **/target/
